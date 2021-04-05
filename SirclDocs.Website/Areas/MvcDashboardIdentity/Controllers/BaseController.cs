@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
 {
     [Area("MvcDashboardIdentity")]
-    //[Authorize(Roles = "Administrator,IdentityAdministrator")]
+    [Authorize(Roles = "Administrator,IdentityAdministrator")]
     public abstract class BaseController : Controller
     {
         protected IActionResult Back(bool allowCaching = true)
