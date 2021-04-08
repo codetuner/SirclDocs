@@ -88,7 +88,7 @@ $.fn.html = function (htmlStringOrFx) {
     } else {
         $t.each(function () { sircl._beforeUnload(this); });
         sircl_originalJqHtml.call($t, htmlStringOrFx);
-        if (htmlStringOrFx !== null && htmlStringOrFx !== "") {
+        if (htmlStringOrFx !== null) {
             $t.each(function () { sircl._afterLoad(this); });
         }
     }

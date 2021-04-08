@@ -107,9 +107,11 @@
         sircl.$mainTargetSelector = "#body-content";
 
         $$("before", function () {
+            console.log("TinyMCE: removing editors");
             tinymce.remove("TEXTAREA[data-type='html']");
         });
         $$("process", function () {
+            console.log("TinyMCE: initializing editors");
             tinymce.init({
                 selector: "TEXTAREA[data-type='html']",
                 plugins: "link code fullscreen image charmap lists table hr paste preview print",

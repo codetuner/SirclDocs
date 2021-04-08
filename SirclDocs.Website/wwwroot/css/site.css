@@ -69,3 +69,23 @@ body {
   white-space: nowrap;
   line-height: 60px; /* Vertically center the text there */
 }
+
+
+/* ADDITIONS */
+
+.sircl-color {
+    color: #70ac48;
+}
+
+.sircl-color-bg {
+    background-color: #70ac48;
+}
+
+.sircl-color-dark {
+    color: #518434;
+}
+
+.sircl-color-bg-dark {
+    background-color: #518434;
+}
+

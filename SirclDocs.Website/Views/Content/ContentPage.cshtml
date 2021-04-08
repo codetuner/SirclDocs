@@ -6,7 +6,7 @@
 
 @if (this.Context.User?.IsInRole("Administrator") == true || this.Context.User?.IsInRole("ContentAdministrator") == true || this.Context.User?.IsInRole("ContentEditor") == true)
 {
-    <div class="float-right"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
+    <div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
 }
 
 <h1>@Html.Content("Title")</h1>

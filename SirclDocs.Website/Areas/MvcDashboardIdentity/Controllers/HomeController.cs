@@ -41,20 +41,5 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
         {
             return View();
         }
-
-        [HttpGet]
-        public IActionResult MvcDashboardsDropdown()
-        {
-            var model = new List<string>();
-            //foreach (var manifest in System.IO.Directory.EnumerateFiles(Path.Combine(AppContext.BaseDirectory, @"..\..\..\Areas")).Select(s => new FileInfo(s)))
-            //{
-            //    if (manifest.Name.StartsWith("MvcDashboard.") && manifest.Name.EndsWith(".manifest"))
-            //    {
-            //        model.Add(manifest.Name.Replace(".manifest", "").Replace(".", ""));
-            //    }
-            //}
-
-            return View(model);
-        }
     }
 }
