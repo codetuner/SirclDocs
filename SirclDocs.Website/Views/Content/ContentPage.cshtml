@@ -9,6 +9,18 @@
     <div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
 }
 
-<h1>@Html.Content("Title")</h1>
+<header>
+    <h1>@Html.Content("Title")</h1>
+</header>
+<nav class="float-end" style="position:fixed; top: 96px; right: 0px; z-index: 800; background-color: white;">
+    
+    <button class="btn btn-light" onclick-toggleshow=".js-toc">
+        <i class="fas fa-list"></i>
+        TOC
+    </button>
 
-@Html.Content("Body")
+    <div class="js-toc" style="" hidden></div>
+</nav>
+<article class="js-toc-content">
+    @Html.Content("Body")
+</article>

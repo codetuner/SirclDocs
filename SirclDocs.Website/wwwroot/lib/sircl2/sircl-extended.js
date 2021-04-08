@@ -91,6 +91,13 @@ $(function () {
         sircl.ext.visible(sircl.ext.$select($(this), $(this).attr("onclick-hide")), false);
     });
 
+    // <* onclick-toggleshow="selector"> On click shows/hides the elements matching the given selector.
+    $(document.body).on("click", "[onclick-toggleshow]", function (event) {
+        sircl.ext.$select($(this), $(this).attr("onclick-toggleshow")).each(function () {
+            sircl.ext.visible($(this), !sircl.ext.visible($(this)));
+        });
+    });
+
     /// <* onclick-removeclass="class [on selector]"> On click, removes the class.
     $(document.body).on("click", "[onclick-removeclass]", function (event) {
         sircl.ext.removeClass($(this), $(this).attr("onclick-removeclass"));
