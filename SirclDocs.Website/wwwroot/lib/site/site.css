@@ -74,15 +74,15 @@ body {
 /* ADDITIONS */
 
 h1 {
-    padding-top: 1em;
+    padding-top: 1.5em;
 }
 
 h2 {
-    padding-top: 1em;
+    padding-top: 1.5em;
 }
 
 h3 {
-    padding-top: 1em;
+    padding-top: 1.5em;
 }
 
 
@@ -102,3 +102,20 @@ h3 {
     background-color: #518434;
 }
 
+.icon-sircl-logo-large {
+    font-size: 12em;
+}
+
+.sircl-home-title {
+    font-size: 6em;
+    font-weight: bold;
+}
+
+@media only screen and (min-width: 992px) {
+    .icon-sircl-logo-large {
+        font-size: 18em;
+    }
+    .sircl-home-title {
+        font-size: 9em;
+    }
+}

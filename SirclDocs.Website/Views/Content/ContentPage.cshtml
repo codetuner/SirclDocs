@@ -4,23 +4,34 @@
     //IgnoreBody();
 }
 
-@if (this.Context.User?.IsInRole("Administrator") == true || this.Context.User?.IsInRole("ContentAdministrator") == true || this.Context.User?.IsInRole("ContentEditor") == true)
-{
-    <div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
-}
+<div class="container">
+    <main role="main" class="pb-3">
 
-<header>
-    <h1>@Html.Content("Title")</h1>
-</header>
-<nav class="float-end" style="position:fixed; top: 96px; right: 0px; z-index: 800; background-color: white;">
-    
-    <button class="btn btn-light" onclick-toggleshow=".js-toc">
-        <i class="fas fa-list"></i>
-        TOC
-    </button>
+        @if (this.Context.User?.IsInRole("Administrator") == true || this.Context.User?.IsInRole("ContentAdministrator") == true || this.Context.User?.IsInRole("ContentEditor") == true)
+        {
+            <div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
+        }
 
-    <div class="js-toc" style="" hidden></div>
-</nav>
-<article class="js-toc-content">
-    @Html.Content("Body")
-</article>
+        <header>
+            <h1>@Html.Content("Title")</h1>
+        </header>
+        @if (Model.Document["HasToc"].Value == "True")
+        {
+            <nav class="float-end" style="position:fixed; top: 96px; right: 0px; z-index: 800; background-color: white;">
+                <button class="btn btn-light" onclick-toggleshow=".js-toc">
+                    <i class="fas fa-list"></i>
+                    TOC
+                </button>
+                <div class="js-toc" style="" hidden></div>
+            </nav>
+        }
+        @if (Model.Document["Summary"].Value != null)
+        { 
+            <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
+        }
+        <article class="js-toc-content">
+            @Html.Content("Body")
+        </article>
+
+    </main>
+</div>
