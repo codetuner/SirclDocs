@@ -49,26 +49,33 @@ sircl._actionCall = function (triggerElement, $subjects, $scope, url, name, valu
     // Get method:
     var method = (($(triggerElement).closest("[method]").attr("method") || "get").toUpperCase() == "POST") ? "POST" : "GET";
     // In url, substitute "[...]" by form values:
-    var fieldparser = new RegExp(/\%5B[a-z0-9\.\-\_]+?\%5D/gi);
-    var fieldnames = [];
-    do {
-        var fieldname = fieldparser.exec(url);
-        if (fieldname !== null) fieldnames.push(fieldname[0]);
-        else break;
-    } while (true);
-    for (var f = 0; f < fieldnames.length; f++) {
-        var fieldvalue = $("[name=" + fieldnames[f].substr(3, fieldnames[f].length - 6) + "]").val();
-        if (fieldvalue === undefined)
-            url = url.replace(fieldnames[f], "");
-        else
-            url = url.replace(fieldnames[f], encodeURIComponent(fieldvalue));
+    if ($scope.hasClass("substitute-fields")) {
+        var $formscope = $(triggerElement).closest("FORM");
+        if ($formscope.length == 0) $formscope = $(document);
+        var fieldparser = new RegExp(/(\[[a-z0-9\.\-\_]+?\])|(\%5B[a-z0-9\.\-\_]+?\%5D)/gi);
+        var fieldnames = [];
+        do {
+            var fieldname = fieldparser.exec(url);
+            if (fieldname !== null) fieldnames.push(fieldname[0]);
+            else break;
+        } while (true);
+        for (var f = 0; f < fieldnames.length; f++) {
+            var fieldvalue = (fieldnames[f].charAt(0) === "[")
+                ? $formscope.find("[name='" + fieldnames[f].substr(1, fieldnames[f].length - 2) + "']").val()
+                : $formscope.find("[name='" + fieldnames[f].substr(3, fieldnames[f].length - 6) + "']").val();
+            if (fieldvalue === undefined)
+                url = url.replace(fieldnames[f], "");
+            else
+                url = url.replace(fieldnames[f], encodeURIComponent(fieldvalue));
+        }
     }
     // Build data:
     if (value === null || value === undefined) value = [];
     if (!Array.isArray(value)) value = [value];
     var data = "name=" + encodeURIComponent(name);
     for (var i = 0; i < value.length; i++) {
-        data = data + "&value=" + encodeURIComponent(value[i]) + "&" + encodeURIComponent(name) + "=" + encodeURIComponent(value[i]);
+        data += "&value=" + encodeURIComponent(value[i]);
+        if (name != "") data += "&" + encodeURIComponent(name) + "=" + encodeURIComponent(value[i]);
     }
     // If GET, add data to url:
     if (method === "GET") {
@@ -76,12 +83,14 @@ sircl._actionCall = function (triggerElement, $subjects, $scope, url, name, valu
         data = null;
     }
     // Perform request:
+    var cache = false;
+    if ($(triggerElement).attr("browser-cache") != null) cache = ($(triggerElement).attr("browser-cache").toLowerCase() == "on");
     var req = { $trigger: $(triggerElement), $subjects: $subjects, $scope: $scope, event: event };
     var jqxhr = $.ajax({
         url: url,
         method: method,
         data: data,
-        cache: false,
+        cache: cache,
         beforeSend: function (xhr, settings) {
             req.xhr = xhr;
             sircl._runChangeActionHandlers("beforeSend", triggerElement, req);
@@ -97,7 +106,7 @@ sircl._actionCall = function (triggerElement, $subjects, $scope, url, name, valu
         sircl._runChangeActionHandlers("beforeRender", triggerElement, req);
         if (!req.succeeded) sircl._runChangeActionHandlers("onError", triggerElement, req);
         if (req.succeeded) {
-            if (xhr.getResponseHeader("content-type") == "text/html") {
+            if ((xhr.getResponseHeader("Content-Type") || "").indexOf("text/html") == 0) {
                 if (onHtml) onHtml.apply(triggerElement, [req]);
             } else {
                 if (onJson) onJson.apply(triggerElement, [req]);
@@ -114,7 +123,7 @@ sircl._actionCall = function (triggerElement, $subjects, $scope, url, name, valu
         sircl._runChangeActionHandlers("beforeRender", triggerElement, req);
         if (!req.succeeded) sircl._runChangeActionHandlers("onError", triggerElement, req);
         if (req.succeeded) {
-            if (xhr.getResponseHeader("content-type") == "text/html") {
+            if ((xhr.getResponseHeader("Content-Type") || "").indexOf("text/html") == 0) {
                 if (onHtml) onHtml.apply(triggerElement, [req]);
             } else {
                 if (onJson) onJson.apply(triggerElement, [req]);
@@ -145,7 +154,7 @@ $(function () {
     $(document.body).on("change", "[onchange-action] INPUT[type=radio]:not([onchange-action])", function (event) {
         var $this = $(this);
         var $scope = $this.closest("[onchange-action]");
-        var $subjects = $scope.find("INPUT[type=radio][name=" + this.name + "]:not([onchange-action])");
+        var $subjects = $scope.find("INPUT[type=radio][name='" + this.name + "']:not([onchange-action])");
         sircl._actionCall(this, $subjects, $scope, $scope.attr("onchange-action"), this.name, jQuery.makeArray($subjects.filter(":checked")).map(function (elem) { return elem.value; }), event, function (req) {
             var newValue = req.data;
             if (Array.isArray(newValue) && newValue.length > 0) newValue = newValue[0];
@@ -155,17 +164,17 @@ $(function () {
                 $subjects.prop("checked", false);
                 $subjects[0]._previousActionValue = null;
             } else {
-                $subjects.filter("[value=" + newValue + "]").prop("checked", true);
+                $subjects.filter("[value='" + newValue + "']").prop("checked", true);
                 $subjects[0]._previousActionValue = newValue;
             }
         }, function (req) {
                 sircl.ext.$select(req.$scope, req.$scope.attr("target")).html(req.data);
         }, function (req) {
-            var previousActionValue = $scope.find("INPUT[type=radio][name=" + this.name + "]:not([onchange-action]):first")[0]._previousActionValue;
+            var previousActionValue = $scope.find("INPUT[type=radio][name='" + this.name + "']:not([onchange-action]):first")[0]._previousActionValue;
             if (previousActionValue) {
-                $scope.find("INPUT[type=radio][name=" + this.name + "][value=" + previousActionValue + "]:not([onchange-action])").prop("checked", true);
+                $scope.find("INPUT[type=radio][name='" + this.name + "'][value='" + previousActionValue + "']:not([onchange-action])").prop("checked", true);
             } else {
-                $scope.find("INPUT[type=radio][name=" + this.name + "]:not([onchange-action])").prop("checked", false);
+                $scope.find("INPUT[type=radio][name='" + this.name + "']:not([onchange-action])").prop("checked", false);
             }
         });
     });
@@ -184,8 +193,8 @@ $(function () {
     $(document.body).on("change", "[onchange-action] INPUT[type=checkbox]:not([onchange-action])", function (event) {
         var $this = $(this);
         var $scope = $this.closest("[onchange-action]");
-        var $subjects = $scope.find("INPUT[type=checkbox][name=" + this.name + "]:not([onchange-action])");
-        sircl._actionCall(this, $subjects, $scope, $scope.attr("onchange-action"), this.name, jQuery.makeArray($scope.find("INPUT[type=checkbox][name=" + this.name + "]:checked:not([onchange-action])")).map(function (elem) { return elem.value; }), event, function (req) {
+        var $subjects = $scope.find("INPUT[type=checkbox][name='" + this.name + "']:not([onchange-action])");
+        sircl._actionCall(this, $subjects, $scope, $scope.attr("onchange-action"), this.name, jQuery.makeArray($scope.find("INPUT[type=checkbox][name='" + this.name + "']:checked:not([onchange-action])")).map(function (elem) { return elem.value; }), event, function (req) {
             var newValue = req.data;
             if (typeof newValue === "string") newValue = [newValue];
             if (Array.isArray(newValue)) {
@@ -265,7 +274,7 @@ $$(function () {
     $(this).find("[onchange-action] INPUT:not([onchange-action])").each(function () {
         var $scope = $(this).closest("[onchange-action]");
         if ($(this).is("[type=radio]")) {
-            $scope.find("INPUT[type=radio][name=" + this.name + "]:not([onchange-action]):first")[0]._previousActionValue = $("INPUT[type=radio][name=" + this.name + "]:not([onchange-action]):checked").val();
+            $scope.find("INPUT[type=radio][name='" + this.name + "']:not([onchange-action]):first")[0]._previousActionValue = $("INPUT[type=radio][name='" + this.name + "']:not([onchange-action]):checked").val();
         } else if ($(this).is("[type=checkbox]")) {
             this._previousActionValue = $(this).prop("checked");
         } else {

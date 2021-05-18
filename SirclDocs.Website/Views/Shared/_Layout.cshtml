@@ -30,7 +30,7 @@
                         <a class="nav-link" href="/Home"><i class="far fa-file-alt"></i> Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/GetStarted"><i class="far fa-file-alt"></i> Get Started</a>
+                        <a class="nav-link" href="/Doc/v2/GetStarted"><i class="far fa-file-alt"></i> Get Started</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/Reference"><i class="far fa-file-alt"></i> Reference</a>
@@ -50,7 +50,11 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2021 - SirclDocs.Website - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2021 - Arebis / CodeTuner / Rudi Breedenraedt - <a href="/Identity/Account/Login?ReturnUrl=%2F">Login</a>
+            @if (User.IsInRole("Administrator"))
+            {
+                @: - <a href="/MvcDashboardIdentity">Identity</a> - <a href="/MvcDashboardContent">Content</a>
+            }
         </div>
     </footer>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>

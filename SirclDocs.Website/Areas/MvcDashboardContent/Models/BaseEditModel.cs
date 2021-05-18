@@ -8,7 +8,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Models
     public class BaseEditModel<TItem>
     {
         public TItem Item { get; set; }
-
+        
         public bool HasChanges { get; set; }
     }
 }
