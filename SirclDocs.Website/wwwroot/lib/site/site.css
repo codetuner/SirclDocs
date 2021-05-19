@@ -96,6 +96,12 @@ code {
     color: midnightblue;
 }
 
+pre.http {
+    background-color: lightskyblue;
+    padding: 4px 8px 4px 8px;
+    border-radius: 2px;
+}
+
 .sircl-color {
     color: #70ac48;
 }
