@@ -69,14 +69,17 @@ HTMLFormElement.prototype.submit = function (event) {
         // Find target of submit request:
         var $trigger = (this._formTrigger) ? $(this._formTrigger) : $(this);
         var target = null;
+        var $targetScope = $(this);
         if ($trigger.hasAttr("formtarget")) {
             target = $trigger.attr("formtarget");
+            $targetScope = $trigger;
         } else if ($trigger.closest("[target]").length > 0) {
             target = $trigger.closest("[target]").attr("target");
+            $targetScope = $trigger.closest("[target]");
         }
         if ((target != null && sircl.ext.isInternalTarget(target)) || (target == null && sircl.singlePageMode == true)) {
             // Forward to the server side rendering handler:
-            var $target = (target != null) ? $(target) : sircl.ext.$mainTarget();
+            var $target = (target != null) ? sircl.ext.$select($targetScope, target) : sircl.ext.$mainTarget();
             sircl._submitForm($trigger, $(this), $target, event);
         } else {
             // Navigate link through default behavior
@@ -141,7 +144,7 @@ console.info("Sircl v." + sircl.version+ " running.");
 
 sircl.html_spinner = '<i class="sircl-spinner sircl-spinning"></i> ';
 
-sircl.$mainTargetSelector = ".main-target";
+sircl.mainTargetSelector$ = ".main-target";
 
 //#endregion
 
@@ -192,7 +195,7 @@ sircl.ext.getId = function (elementOrSelector, createIdIfMissing) {
  * Returns the main target of the page.
  */
 sircl.ext.$mainTarget = function () {
-    var $mainTarget = $(sircl.$mainTargetSelector);
+    var $mainTarget = $(sircl.mainTargetSelector$);
     return $mainTarget;
 }
 
@@ -246,7 +249,7 @@ sircl.ext.$select = function ($context, selector$) {
                 $result = $result.add($context);
             } else if (sel$ === ":form") {
                 if ($context.hasAttr("form")) {
-                    $result = $result.add(sircl.ext.$select($context, $context.attr("form")));
+                    $result = $result.add($("#" + $context.attr("form")));
                 } else {
                     $result = $result.add($context.closest("FORM"));
                 }
@@ -464,6 +467,13 @@ sircl._submitForm = function ($trigger, $form, $target, event, loadComplete) {
         req.formData = null;
     }
 
+    // Add files if any:
+    if ($trigger.length > 0 && $trigger[0]._files != null && req.formData != null && req.method == "post" && req.enctype == "multipart/form-data") {
+        for (var f = 0; f < $trigger[0]._files.length; f++) {
+            req.formData.append($trigger[0]._filesName, $trigger[0]._files[f]);
+        }
+    }
+
     // Process submission:
     this._processRequest(req, loadComplete);
 };
@@ -621,6 +631,13 @@ SirclRequestProcessor.prototype._send = function (req) {
                 $(this).load($(this).attr("onload-load"));
             });
         }
+        // Check for abort reload:
+        var reloadAfter = req.xhr.getResponseHeader("X-Sircl-ReloadAfter");
+        if (reloadAfter != null) {
+            if (parseFloat(reloadAfter) <= 0) {
+                clearInterval(req.$initialTarget[0]._onloadInterval);
+            }
+        }
         // If a Location header is given, redirect to that location:
         var newLocation = req.xhr.getResponseHeader("Location"); // Redirect
         if (newLocation !== null) {
@@ -754,7 +771,7 @@ SirclRequestProcessor.prototype._render = function (req) {
     // If the sub-target is found in the finalTarget:
     if (subTarget$ != null && $subTarget.length > 0) {
         // Parse the responseText:
-        var $response = $('<div/>').append(req.responseText);
+        var $response = $("<div/>").append(req.responseText);
         var subResponseText = $response.find(subTarget$).html();
         // If the responseText also contains the sub-target:
         if (subResponseText != null) {
@@ -816,12 +833,12 @@ SirclRequestProcessor.prototype.error = function (req) {
 $(document).ready(function () {
 
     // Detect SinglePage modus:
-    sircl.singlePageMode = $(sircl.$mainTargetSelector).length > 0;
+    sircl.singlePageMode = $(sircl.mainTargetSelector$).length > 0;
     console.info("sircl.singlePageMode = " + sircl.singlePageMode + "");
 
     /// Any element having a href attribute (and no download attribute):
     /// Handles special href values
-    $(document.body).on("click", "*[href]:not([download])", function (event) {
+    $(document).on("click", "*[href]:not([download])", function (event) {
         // Get href:
         var href = this.getAttribute("href");
         // In href, substitute "[...]" by form values:
@@ -897,7 +914,7 @@ $(document).ready(function () {
     });
 
     /// Clicking a submit element may submit a form:
-    $(document.body).on("click", "form *:submit, *:submit[form]", function (event) {
+    $(document).on("click", "form *:submit, *:submit[form]", function (event) {
         // To not interfer with form validation, we let default behavior happen.
         // But we want to know the form trigger element, and unfortunately there's no but a dirty way to get it...
         var form = (this.hasAttribute("form")) ? document.getElementById(this.getAttribute("form")) : $(this).closest("FORM")[0];
@@ -907,26 +924,27 @@ $(document).ready(function () {
     });
 
     /// Submitting a form:
-    $(document.body).on("submit", "form:not([download]):not([method=dialog])", function (event) {
+    $(document).on("submit", "form:not([download]):not([method=dialog])", function (event) {
         this.submit();
         event.preventDefault();
         event.stopPropagation();
     });
 
-    /// Disable ENTER key to submit forms. I.e. useful when multiple submit buttons and first
-    /// one is not necessarily the default one.
+    /// Defines default submit or cancel buttons.
+    /// Pass an empty selector to disable default form submission.
     /// I.e:
     ///   <form default-submit-button="#save-button" method="post">...</form>
-    $(document.body).on("keydown", "FORM[default-submit-button]", function (event) {
+    $(document).on("keydown", "FORM[default-submit-button] INPUT", function (event) {
         if (event.keyCode == 13) {
-            var $target = $(this).find($(this).attr("default-submit-button"));
-            if ($target.length > 0) $target[0].click(); // See: http://goo.gl/lGftqn
             event.preventDefault();
-        }
-        else if (event.keyCode == 27) {
-            var $target = $(this).find($(this).attr("default-cancel-button"));
+            var $form = $(this).closest("FORM");
+            var $target = sircl.ext.$select($form, $form.attr("default-submit-button"));
             if ($target.length > 0) $target[0].click(); // See: http://goo.gl/lGftqn
+        } else if (event.keyCode == 27) {
             event.preventDefault();
+            var $form = $(this).closest("FORM");
+            var $target = sircl.ext.$select($form, $form.attr("default-cancel-button"));
+            if ($target.length > 0) $target[0].click(); // See: http://goo.gl/lGftqn
         }
     });
 
@@ -1222,7 +1240,7 @@ sircl.addRequestHandler("beforeSend", function (req) {
     if (req.$trigger != null && req.$trigger.length == 1 && req.$trigger[0].tagName != "FORM") {
         var $spinners = req.$trigger.find(".spinner");
         if ($spinners.length > 0) {
-            req._spinner_to_restore = $spinners[0].outerHTML;
+            req._spinner_to_restore = req.$trigger[0].innerHTML;
             $spinners[0].outerHTML = sircl.html_spinner;
         }
     }
@@ -1233,7 +1251,7 @@ sircl.addRequestHandler("beforeSend", function (req) {
 sircl.addRequestHandler("afterSend", function (req) {
     // Hide spinner if any:
     if (req._spinner_to_restore) {
-        req.$trigger.find(".sircl-spinner")[0].outerHTML = req._spinner_to_restore;
+        req.$trigger[0].innerHTML = req._spinner_to_restore;
     }
     // Move to next handler:
     this.next(req);
@@ -1268,7 +1286,7 @@ sircl.addRequestHandler("afterSend", function (req) {
 
 sircl.addRequestHandler("beforeSend", function (req) {
     // Set classes to loading state:
-    $(document.body).addClass("body-loading");
+    $(document).addClass("body-loading");
     req.$initialTarget.addClass("loading");
     // Move to next handler:
     this.next(req);
@@ -1276,7 +1294,7 @@ sircl.addRequestHandler("beforeSend", function (req) {
 
 sircl.addRequestHandler("afterSend", function (req) {
     // Reset classes to loading state:
-    $(document.body).removeClass("body-loading");
+    $(document).removeClass("body-loading");
     req.$initialTarget.removeClass("loading");
     // Move to next handler:
     this.next(req);
@@ -1285,7 +1303,7 @@ sircl.addRequestHandler("afterSend", function (req) {
 $(document).ready(function () {
     $(window).on("beforeunload", function (event) {
         // Ensure load status items are shown:
-        $(document.body).addClass("body-loading");
+        $(document).addClass("body-loading");
     });
 });
 
@@ -1359,6 +1377,24 @@ sircl.addRequestHandler("afterSend", function (req) {
 
 //#endregion
 
+//#region Reload by server
+
+sircl.addRequestHandler("afterRender", function (req) {
+    // If reloadAfter header is set with value > 0, reload after timeout:
+    var reloadAfter = req.xhr.getResponseHeader("X-Sircl-ReloadAfter");
+    if (reloadAfter) {
+        if (reloadAfter > 0 && req.method == "get") {
+            setTimeout(function () {
+                req.$finalTarget.load(req.url)
+            }, reloadAfter * 1000);
+        }
+    }
+    // Move to next handler:
+    this.next(req);
+});
+
+//#endregion
+
 //#region HTML5 Dialog handling
 
 sircl.addRequestHandler("beforeSend", function (req) {
@@ -1410,7 +1446,7 @@ sircl.addRequestHandler("beforeRender", function (req) {
 
 $(document).ready(function () {
     // Reset content of a modal with onclose-reset when closing the modal:
-    $(document.body).on("close", "DIALOG.onclose-restore", function (event) {
+    $(document).on("close", "DIALOG.onclose-restore", function (event) {
         var originalContent = $(this)[0]._originalContent;
         if (originalContent !== undefined) $(this).html(originalContent);
     });
@@ -1436,7 +1472,7 @@ sircl.addAttributeAlias(".onchange-submit", "onchange-submit", ":form");
 $(function () {
 
     /// <* onchange-submit="form-selector"> Triggers form submission on change.
-    $(document.body).on("change", "[onchange-submit]", function (event) {
+    $(document).on("change", "[onchange-submit]", function (event) {
         if ($(event.target).closest(".onchange-nosubmit").length == 0 && $(event.target).closest(".sircl-content-processing").length == 0) {
             var $form = sircl.ext.$select($(this), $(this).attr("onchange-submit"));
             if ($form.length > 0) $form[0].submit();
@@ -1444,7 +1480,7 @@ $(function () {
     });
 
     /// <input oninput-changeafter="0.8"> On input on the element, triggers a change event.
-    $(document.body).on("input", "INPUT[oninput-changeafter], TEXTAREA[oninput-changeafter]", function (event) {
+    $(document).on("input", "INPUT[oninput-changeafter], TEXTAREA[oninput-changeafter]", function (event) {
         var timeout = 1000 * $(this).attr("oninput-changeafter");
         if (this._oninput_changeafter_timeout) {
             clearTimeout(this._oninput_changeafter_timeout);
@@ -1454,7 +1490,7 @@ $(function () {
         }, timeout, this);
     });
     /// Prevent change event if value has not really changed since last change event:
-    $(document.body).children().on("change", "INPUT[oninput-changeafter], TEXTAREA[oninput-changeafter]", function (event) {
+    $(document.body).on("change", "INPUT[oninput-changeafter], TEXTAREA[oninput-changeafter]", function (event) {
         var currentValue = $(this).val();
         var previousValue = this._previousChangeValue;
         if (currentValue === previousValue) {
@@ -1523,7 +1559,7 @@ $$(function () {
 
     /// <* onload-click="selector"> On load, triggers a click event on the selector matches.
     $(this).closest("[onload-click]").each(function () {
-        sircl.ext.$select($(this), $(this).attr("onload-click")).click();
+        sircl.ext.$select($(this), $(this).attr("onload-click"))[0].click(); // See: http://goo.gl/lGftqn
     });
 
     /// <* onload-load="url" [onload-reloadafter="seconds"]> Loads the given URL.
@@ -1535,7 +1571,7 @@ $$(function () {
         var loadRefresh = $(this).attr("onload-reloadafter");
         $(this).load(url.replace("{rnd}", Math.random()));
         if (loadRefresh) {
-            window.setInterval(function ($target) { $target.load(url.replace("{rnd}", Math.random())); }, loadRefresh * 1000, $(this));
+            $(this)[0]._onloadInterval = window.setInterval(function ($target) { $target.load(url.replace("{rnd}", Math.random())); }, loadRefresh * 1000, $(this));
         } else {
             //$(this).removeAttr("onload-load"); Do not remove otherwise onload-reload does not work...
         }
