@@ -758,9 +758,15 @@ $(function () {
 
         /// <* class="onscrolltop-fade"> Makes the element visible when scrolling down (using a fading animation), hidden when scrolled at top.
         if ($(this).scrollTop() > 100) {
-            $(".onscrolltop-fade").fadeIn(800);
+            if ($.isFunction($.fn.fadeIn)) { // fadeIn/Out is not available in slim version if jQuery
+                $(".onscrolltop-fade").fadeIn(800);
+            }
+            sircl.ext.visible($(".onscrolltop-fade"), true);
         } else {
-            $(".onscrolltop-fade").fadeOut(400);
+            if ($.isFunction($.fn.fadeOut)) { // fadeIn/Out is not available in slim version if jQuery
+                $(".onscrolltop-fade").fadeOut(400);
+            }
+            sircl.ext.visible($(".onscrolltop-fade"), false);
         }
 
         /// <* ifinviewport-load="url"> Loads the given URL and places the result in the element when the element is visible in the viewport.
@@ -773,11 +779,15 @@ $(function () {
         });
     });
 
-    /// <* class="onclick-scrolltop"> If clicked, scrolls the page to top (in slow, animaged way).
+    /// <* class="onclick-scrolltop"> If clicked, scrolls the page to top (in slow, animated way).
     $(document).on("click", ".onclick-scrolltop", function (event) {
-        $("body,html").animate({
-            scrollTop: 0
-        }, 500);
+        if ($.isFunction($.fn.animate)) { // animate is not available in slim version if jQuery
+            $("body,html").animate({
+                scrollTop: 0
+            }, 500);
+        } else {
+            window.scrollTo(0, 0);
+        }
         return false;
     });
 });
@@ -934,7 +944,9 @@ $(function () {
         if (maxFileSize.indexOf("KB") > 0) maxFileSize = parseFloat(maxFileSize.replace("KB", "").trim()) * 1024;
         else if (maxFileSize.indexOf("MB") > 0) maxFileSize = parseFloat(maxFileSize.replace("MB", "").trim()) * 1024 * 1024;
         else maxFileSize = parseFloat(maxFileSize);
-        var invalidFileMsg = invalidFileMsg = $this.attr("ondropinvalidfile-alert");
+        var maxFileCount = parseInt($this.attr("dropfile-maxcount") || "99");
+        var invalidFileMsg = $this.attr("ondropinvalidfile-alert");
+        var tooManyFilesMsg = $this.attr("ondroptoomanyfiles-alert");
         var validFileIndexes = [];
         for (var f = 0; f < event.originalEvent.dataTransfer.files.length; f++) {
             var file = event.originalEvent.dataTransfer.files[f];
@@ -955,16 +967,22 @@ $(function () {
                 }
             }
         }
-        if (validFileIndexes.length != event.originalEvent.dataTransfer.files.length) {
-            if (invalidFileMsg) sircl.ext.alert($this, invalidFileMsg, event, false);
+        if (validFileIndexes.length > maxFileCount && tooManyFilesMsg != null) {
+            sircl.ext.alert($this, tooManyFilesMsg, event, false);
+        } else if (validFileIndexes.length != event.originalEvent.dataTransfer.files.length && invalidFileMsg != null) {
+            sircl.ext.alert($this, invalidFileMsg, event, false);
         }
         if (validFileIndexes.length > 0) {
+            if (validFileIndexes.length > maxFileCount) {
+                // Shorten array to maxFileCount:
+                validFileIndexes = validFileIndexes.slice(0, maxFileCount);
+            }
             if ($this.hasClass("ondropfile-submit")) {
+                // Determine form:
                 var $form = ($this.hasAttr("form"))
                     ? $("#" + $this.attr("form"))
                     : $this.closest("FORM");
                 if ($form.length > 0) {
-
                     // Prevent default browser behavior:
                     event.preventDefault();
                     // Add a submit button:

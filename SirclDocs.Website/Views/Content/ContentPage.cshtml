@@ -4,34 +4,60 @@
     //IgnoreBody();
 }
 
-<div class="container">
+@if (this.Context.User?.IsInRole("Administrator") == true || this.Context.User?.IsInRole("ContentAdministrator") == true || this.Context.User?.IsInRole("ContentEditor") == true)
+{
+    <div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
+}
+
+<div class="container-xxl">
+
     <main role="main" class="pb-3">
 
-        @if (this.Context.User?.IsInRole("Administrator") == true || this.Context.User?.IsInRole("ContentAdministrator") == true || this.Context.User?.IsInRole("ContentEditor") == true)
-        {
-            <div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
-        }
+        <div class="row">
+            <div class="col-2">
+            </div>
+            <div class="col">
+                <header>
+                    <h1>@Html.Content("Title")</h1>
+                </header>
+            </div>
+        </div>
 
-        <header>
-            <h1>@Html.Content("Title")</h1>
-        </header>
-        @if (Model.Document["HasToc"].Value == "True")
-        {
-            <nav class="float-end" style="position:fixed; top: 96px; right: 0px; z-index: 800; background-color: white;">
-                <button class="btn btn-light" onclick-toggleshow=".js-toc">
-                    <i class="fas fa-list"></i>
-                    TOC
-                </button>
-                <div class="js-toc" style="" hidden></div>
-            </nav>
-        }
-        @if (Model.Document["Summary"].Value != null)
-        { 
-            <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
-        }
-        <article class="js-toc-content">
-            @Html.Content("Body")
-        </article>
+        <div class="row">
+            <div class="col-2">
+            </div>
+            <div class="col">
+                @if (Model.Document["Summary"].Value != null)
+                {
+                    <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
+                }
+            </div>
+            @if (Model.Document["HasToc"].Value == "True")
+            {
+                <div class="col-2 toc"></div>
+            }
+        </div>
+
+        <div class="row">
+            <div class="col-2">
+            </div>
+            <div class="col-8">
+                    @Html.Content("Body")
+            </div>
+            @if (Model.Document["HasToc"].Value == "True")
+            {
+                <div class="col-2 toc">
+                    <h4>Some content line</h4>
+                    <h4>Some content line</h4>
+                    <h4>Some content line</h4>
+                    <h4>Some content line</h4>
+                    <h4>Some content line</h4>
+                    <h4>Some content line</h4>
+                </div>
+            }
+        </div>
 
     </main>
+
 </div>
+
