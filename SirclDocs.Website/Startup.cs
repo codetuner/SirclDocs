@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SirclDocs.Website.Data;
+using SirclDocs.Website.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,13 +38,24 @@ namespace SirclDocs.Website
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
 
-            // region Content:
+            #region Content:
 
             services.AddDbContext<Data.Content.ContentDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
 
-            // endregion
+            #endregion
+
+            #region Logging
+
+            services.AddDbContext<Data.Logging.LoggingDbContext>(options =>
+                options.UseSqlServer(
+                    Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddScoped<SirclDocs.Website.Logging.RequestLogger>();
+
+            #endregion
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -60,6 +72,14 @@ namespace SirclDocs.Website
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            #region Logging
+            app.UseArebisRequestLog()
+                .LogSlowRequests()
+                .LogExceptions()
+                .LogNotFounds();
+            #endregion
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 

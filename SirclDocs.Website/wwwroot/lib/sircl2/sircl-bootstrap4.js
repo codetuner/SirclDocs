@@ -6,8 +6,8 @@
 /////////////////////////////////////////////////////////////////
 
 // Initialize sircl lib:
-if (typeof sircl === "undefined") console.warn("The file 'sircl-bootstrap4' component should be registered after the 'sircl' component. Please review order of script files.");
-if (typeof bootstrap === "undefined") console.warn("The file 'sircl-bootstrap4' component requires the 'bootstrap' component. See https://getbootstrap.com/");
+if (typeof sircl === "undefined") console.warn("The 'sircl-bootstrap4' component should be registered after the 'sircl' component. Please review order of script files.");
+if (typeof bootstrap === "undefined") console.warn("The 'sircl-bootstrap4' component requires the 'bootstrap' component. See https://getbootstrap.com/");
 
 //// Initialize Bootstrap popovers, tooltips, etc. using a $$() function as in:
 //<script>
@@ -250,8 +250,8 @@ $(function () {
 //#region Handling Bootstrap Toasts
 
 $$(function () {
-    // Automatically show toasts with .onload-showtoast when loaded:
-    $(this).find(".toast.onload-showtoast").toast("show");
+    // Automatically show toasts with .oninit-showtoast on init:
+    $(this).find(".toast.oninit-showtoast").toast("show");
 });
 
 //#endregion
