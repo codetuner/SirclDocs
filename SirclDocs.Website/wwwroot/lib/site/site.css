@@ -135,3 +135,54 @@ pre.http {
         font-size: 9em;
     }
 }
+
+/* Back-Top button */
+
+#back-top {
+    display: block;
+    position: fixed;
+    bottom: 24px;
+    right: 36px;
+    font-size: 32px;
+    color: #222;
+    background-color: white;
+    opacity: 0.4;
+    z-index: 500;
+}
+
+    #back-top:hover {
+        opacity: 1;
+    }
+
+/* TOC */
+
+.toc {
+    padding-top: 1.8em;
+    cursor: pointer;
+    color: gray;
+}
+
+.toc-h {
+}
+
+.toc-h:hover {
+    text-decoration: underline;
+}
+
+.toc-h2 {
+    padding: 6px 0px 2px 0px;
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.toc-h3 {
+    padding: 4px 0px 2px 4px;
+    font-size: 11pt;
+    font-weight: normal;
+}
+
+.toc-h4 {
+    padding: 2px 0px 2px 12px;
+    font-size: 10pt;
+    font-weight: normal;
+}

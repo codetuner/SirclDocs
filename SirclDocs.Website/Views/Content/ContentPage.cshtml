@@ -6,7 +6,7 @@
 
 @if (this.Context.User?.IsInRole("Administrator") == true || this.Context.User?.IsInRole("ContentAdministrator") == true || this.Context.User?.IsInRole("ContentEditor") == true)
 {
-<div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
+    <div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
 }
 
 
@@ -15,7 +15,7 @@
     <main role="main" class="pb-3">
 
         <div class="row">
-            <div class="col-2">
+            <div class="col-2 d-print-none">
             </div>
             <div class="col">
                 <header>
@@ -25,36 +25,33 @@
         </div>
 
         <div class="row">
-            <div class="col-2">
+            <div class="col-2 d-print-none">
             </div>
             <div class="col">
                 @if (Model.Document["Summary"].Value != null)
                 {
-                <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
+                    <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
                 }
             </div>
             @if (Model.Document["HasToc"].Value == "True")
             {
-            <div class="col-2 toc"></div>
+                <div class="col-2 d-print-none"></div>
             }
         </div>
 
         <div class="row">
-            <div class="col-2">
+            <div class="col-2 d-print-none">
             </div>
             <div class="col-8">
                 @Html.Content("Body")
             </div>
             @if (Model.Document["HasToc"].Value == "True")
             {
-            <div class="col-2 toc">
-                <h4>Some content line</h4>
-                <h4>Some content line</h4>
-                <h4>Some content line</h4>
-                <h4>Some content line</h4>
-                <h4>Some content line</h4>
-                <h4>Some content line</h4>
-            </div>
+                <div class="col-2 d-print-none">
+                    <div class="toc">
+                        <i>Loading...</i>
+                    </div>
+                </div>
             }
         </div>
 
