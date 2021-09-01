@@ -80,6 +80,20 @@ namespace SirclDocs.Website
                 .LogNotFounds();
             #endregion
 
+            // Redirect "*://getsircl.com" to "*://www.getsircl.com":
+            // https://weblog.west-wind.com/posts/2020/Mar/13/Back-to-Basics-Rewriting-a-URL-in-ASPNET-Core
+            app.Use(async (context, next) =>
+            {
+                // Redirect to an external URL
+                if (context.Request.Host.Host.Equals("getsircl.com", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Redirect("https://www.getsircl.com" + context.Request.Path.Value);
+                    return;   // short circuit
+                }
+
+                await next();
+            });
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 

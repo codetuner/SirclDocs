@@ -96,6 +96,10 @@ code {
     color: midnightblue;
 }
 
+.code-toolbar {
+    margin-bottom: 18px;
+}
+
 pre.http {
     background-color: lightskyblue;
     padding: 4px 8px 4px 8px;

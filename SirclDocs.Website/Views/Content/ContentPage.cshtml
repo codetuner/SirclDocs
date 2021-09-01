@@ -25,7 +25,6 @@
 <div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
 }
 
-
 <div class="container-xxl">
 
     <main role="main" class="pb-3 @(Model.Document.Type.Name.ToLower())">
@@ -76,7 +75,7 @@
                     <div class="col-lg-9">
                         @Html.Content("Body")
                     </div>
-                    <div class="col-lg-3 d-xs-none d-sm-none d-md-none d-lg-block d-print-none">
+                    <div class="col-lg-3 d-none d-lg-block d-print-none">
                         <div class="toc" style="position: sticky; top: 0;">
                             <i>Loading...</i>
                         </div>
