@@ -20,4 +20,9 @@
     <Folder Include="wwwroot\lib\prismjs\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Views\Samples\BrownFox.cshtml" />
+    <None Include="Views\Samples\LoremIpsum.cshtml" />
+  </ItemGroup>
+
 </Project>

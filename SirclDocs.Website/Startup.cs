@@ -38,6 +38,23 @@ namespace SirclDocs.Website
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
 
+            #region Cors:
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("SamplesPolicy",
+                    builder => {
+                        builder.WithOrigins("https://cdpn.io")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                        //builder.AllowAnyOrigin()
+                        //.AllowAnyHeader()
+                        //.AllowAnyMethod();
+                    });
+            });
+
+            #endregion
+
             #region Content:
 
             services.AddDbContext<Data.Content.ContentDbContext>(options =>
@@ -98,6 +115,8 @@ namespace SirclDocs.Website
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseCors();
 
             app.UseAuthentication();
             app.UseAuthorization();
