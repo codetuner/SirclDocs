@@ -146,7 +146,7 @@ pre.http {
     display: block;
     position: fixed;
     bottom: 24px;
-    right: 36px;
+    xright: 36px;
     font-size: 32px;
     color: #222;
     background-color: white;
@@ -195,10 +195,25 @@ pre.http {
         text-decoration: underline;
     }
 
-.section-index div {
-    font-size: 120%;
-    font-weight: bold;
-    padding: 2px 4px 2px 4px;
+.section-index {
+    padding-left: 12px;
+}
+
+.section-index h2 {
+    font-size: 16pt;
+    padding: 4pt 0pt 2pt 0pt;
+}
+
+.section-index a {
+    text-decoration: none;
+}
+
+    .section-index a:hover {
+        text-decoration: underline;
+    }
+
+.section-index blockquote {
+    padding: 0pt 8pt 0pt 8pt;
 }
 
 /* TOC */

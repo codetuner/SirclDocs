@@ -1,0 +1,11 @@
+﻿@{
+    Layout = "_Layout";
+    this.Context.Response.StatusCode = 404;
+}
+
+@if (this.Context.User?.IsInRole("Administrator") == true || this.Context.User?.IsInRole("ContentAdministrator") == true || this.Context.User?.IsInRole("ContentEditor") == true)
+{
+
+}
+
+<h1 class="text-center">404 Page not found</h1>

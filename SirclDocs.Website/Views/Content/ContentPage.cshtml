@@ -8,6 +8,8 @@
     var hasToc = Boolean.Parse(Model.Document["HasToc"].Value ?? "False");
     var section = Model.Parents.Where(p => p.Type.Name == "SectionPage").FirstOrDefault();
     var neighbours = new Document[0];
+    var previous = default(Document);
+    var next = default(Document);
     if (section != null)
     {
         neighbours = context.ContentDocuments
@@ -17,161 +19,171 @@
             .Where(n => n.Type.Name == "Page" || n.Type.Name == "SectionPage")
             .OrderBy(n => n.SortKey)
             .ToArray();
+        var currentIndex = Array.IndexOf(neighbours, Model.Document);
+        if (currentIndex > 0) previous = neighbours[currentIndex - 1];
+        if (currentIndex < neighbours.Length - 1) next = neighbours[neighbours.Length - 1];
     }
 }
 
 @if (this.Context.User?.IsInRole("Administrator") == true || this.Context.User?.IsInRole("ContentAdministrator") == true || this.Context.User?.IsInRole("ContentEditor") == true)
 {
-<div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
+    <div class="float-right float-end"><a asp-action="Edit" , asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
 }
 
+
 <div class="container-xxl">
+
 
     <main role="main" class="pb-3 @(Model.Document.Type.Name.ToLower())">
 
         @if (section != null && hasToc)
         {
-        <div class="row d-block d-xs-block d-sm-block d-md-none d-print-none mt-3">
-            <div class="col-12">
-                <i class="fas fa-arrow-circle-left"></i>&nbsp;<a href="@(section.Path)"><b>@(section["Title"].Value)</b></a>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-2 d-none d-sm-none d-md-block d-print-none">
-                <div class="index">
-                    <div class="back"><a href="@(section.Path)">@(section["Title"].Value)</a></div>
-                    @foreach (var neighbour in neighbours)
-                    {
-                        if (neighbour.Id == Model.Document.Id)
-                        {
-                            <div class="active"><a href="@(neighbour.Path)">@(neighbour["Title"].Value)</a></div>
-                        }
-                        else
-                        {
-                            <div><a href="@(neighbour.Path)">@(neighbour["Title"].Value)</a></div>
-                        }
-                    }
+            <div class="row d-block d-xs-block d-sm-block d-md-none d-print-none mt-3">
+                <div class="col-12">
+                    <i class="fas fa-arrow-circle-left"></i>&nbsp;<a href="@(section.Path)"><b>@(section["Title"].Value)</b></a>
                 </div>
             </div>
-            <div class="col-md-10">
-                <div class="row">
-                    <div class="col-12">
-                        <h1>
-                            @Html.Content("Title")
-                        </h1>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-9">
-                        @if (Model.Document["Summary"].Value != null)
+            <div class="row">
+                <div class="col-md-2 d-none d-sm-none d-md-block d-print-none">
+                    <div class="index">
+                        <div class="back"><a href="@(section.Path)">@(section["Title"].Value)</a></div>
+                        @foreach (var neighbour in neighbours)
                         {
-                            <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
+                            if (neighbour.Id == Model.Document.Id)
+                            {
+                                <div class="active"><a href="@(neighbour.Path)">@(neighbour["Title"].Value)</a></div>
+                            }
+                            else
+                            {
+                                <div><a href="@(neighbour.Path)">@(neighbour["Title"].Value)</a></div>
+                            }
                         }
                     </div>
-                    <div class="col-lg-3 d-md-none d-lg-block d-print-none">
-                    </div>
                 </div>
-                <div class="row">
-                    <div class="col-lg-9">
-                        @Html.Content("Body")
+                <div class="col-md-10">
+                    <div class="row">
+                        <div class="col-12">
+                            <h1>
+                                @Html.Content("Title")
+                            </h1>
+                        </div>
                     </div>
-                    <div class="col-lg-3 d-none d-lg-block d-print-none">
-                        <div class="toc" style="position: sticky; top: 0;">
-                            <i>Loading...</i>
+                    <div class="row">
+                        <div class="col-lg-9">
+                            @if (Model.Document["Summary"].Value != null)
+                            {
+                                <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
+                            }
+                        </div>
+                        <div class="col-lg-3 d-md-none d-lg-block d-print-none">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-9">
+                            @Html.Content("Body")
+                        </div>
+                        <div class="col-lg-3 d-none d-lg-block d-print-none">
+                            <div class="toc" style="position: sticky; top: 0;">
+                                <i>Loading...</i>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
         }
         else if (section != null)
         {
-        <div class="row d-block d-xs-block d-sm-block d-md-none d-print-none mt-3">
-            <div class="col-12">
-                <i class="fas fa-arrow-circle-left"></i>&nbsp;<a href="@(section.Path)"><b>@(section["Title"].Value)</b></a>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-2 d-sm-none d-md-block d-print-none">
-                <div class="index">
-                    <div class="back"><a href="@(section.Path)">@(section["Title"].Value)</a></div>
-                    @foreach (var neighbour in neighbours)
-                    {
-                        if (neighbour.Id == Model.Document.Id)
-                        {
-                            <div class="active"><a href="@(neighbour.Path)">@(neighbour["Title"].Value)</a></div>
-                        }
-                        else
-                        {
-                            <div><a href="@(neighbour.Path)">@(neighbour["Title"].Value)</a></div>
-                        }
-                    }
+            <div class="row d-block d-xs-block d-sm-block d-md-none d-print-none mt-3">
+                <div class="col-12">
+                    <i class="fas fa-arrow-circle-left"></i>&nbsp;<a href="@(section.Path)"><b>@(section["Title"].Value)</b></a>
                 </div>
             </div>
-            <div class="col-md-10">
-                <h1>
-                    @Html.Content("Title")
-                </h1>
-                @if (Model.Document["Summary"].Value != null)
-                {
-                    <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
-                }
-                @Html.Content("Body")
+            <div class="row">
+                <div class="col-md-2 d-sm-none d-md-block d-print-none">
+                    <div class="index">
+                        <div class="back"><a href="@(section.Path)">@(section["Title"].Value)</a></div>
+                        @foreach (var neighbour in neighbours)
+                        {
+                            if (neighbour.Id == Model.Document.Id)
+                            {
+                                <div class="active"><a href="@(neighbour.Path)">@(neighbour["Title"].Value)</a></div>
+                            }
+                            else
+                            {
+                                <div><a href="@(neighbour.Path)">@(neighbour["Title"].Value)</a></div>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="col-md-10">
+                    <h1>
+                        @Html.Content("Title")
+                    </h1>
+                    @if (Model.Document["Summary"].Value != null)
+                    {
+                        <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
+                    }
+                    @Html.Content("Body")
+                </div>
             </div>
-        </div>
         }
         else if (hasToc)
         {
-        <div class="row">
-            <div class="col-12">
-                <h1>@Html.Content("Title")</h1>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-9">
-                @if (Model.Document["Summary"].Value != null)
-                {
-                    <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
-                }
-            </div>
-            <div class="col-lg-3 d-md-none d-lg-block d-print-none">
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-9">
-                @Html.Content("Body")
-            </div>
-            <div class="col-lg-3 d-xs-none d-sm-none d-md-none d-lg-block d-print-none">
-                <div class="toc">
-                    <i>Loading...</i>
+            <div class="row">
+                <div class="col-12">
+                    <h1>@Html.Content("Title")</h1>
                 </div>
             </div>
-        </div>
+            <div class="row">
+                <div class="col-lg-9">
+                    @if (Model.Document["Summary"].Value != null)
+                    {
+                        <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
+                    }
+                </div>
+                <div class="col-lg-3 d-md-none d-lg-block d-print-none">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-9">
+                    @Html.Content("Body")
+                </div>
+                <div class="col-lg-3 d-xs-none d-sm-none d-md-none d-lg-block d-print-none">
+                    <div class="toc">
+                        <i>Loading...</i>
+                    </div>
+                </div>
+            </div>
         }
         else
         {
-        <div class="row">
-            <div class="col-12">
-                <h1>@Html.Content("Title")</h1>
-                @if (Model.Document["Summary"].Value != null)
-                {
-                    <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
-                }
-                @Html.Content("Body")
+            <div class="row">
+                <div class="col-12">
+                    <h1>@Html.Content("Title")</h1>
+                    @if (Model.Document["Summary"].Value != null)
+                    {
+                        <p style="font-size: 110%; font-weight: bold;">@Html.Content("Summary")</p>
+                    }
+                    @Html.Content("Body")
+                </div>
             </div>
-        </div>
         }
 
         @if (Model.Document.Type.Name == "SectionPage")
         {
-        <div class="row">
-            <div class="col-12 section-index">
-                @foreach(var child in Model.Children)
-                {
-                    <div><a href="@(child.Path)">@(child["Title"].Value)</a></div>
-                }
+            <div class="row">
+                <div class="col-12 section-index">
+                    @foreach (var child in Model.Children)
+                    {
+                        <div>
+                            <h2><a href="@(child.Path)">@(child["Title"].Value)</a></h2>
+                            <blockquote>
+                                @(child["Summary"].Value)
+                            </blockquote>
+                        </div>
+                    }
+                </div>
             </div>
-        </div>
         }
 
     </main>

@@ -66,7 +66,8 @@ namespace SirclDocs.Website.Controllers
 
             if (model.Document == null)
             {
-                return new NotFoundObjectResult(null);
+                return View("NotFound");
+                //return new NotFoundObjectResult(null);
             }
             else
             {
