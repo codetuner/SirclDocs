@@ -105,24 +105,41 @@
 
         sircl.mainTargetSelector$ = "#body-content";
 
+        var tinymcy_defaults = {
+            plugins: "link code fullscreen image charmap lists table hr paste preview print",
+            _removed_from_plugins: 'imagetools',
+            toolbar: 'fullscreen | styleselect bold italic alignleft aligncenter alignright | bullist numlist outdent indent | table link image',
+            _removed_from_toolbar: 'undo redo | hr | charmap | code',
+            menubar: true,
+            paste_as_text: false,
+            convert_urls: false,
+            image_list: [],
+            charmap_append: [["0x2713", "Checkmark"], ["0x2714", "Checkmark2"], ["0x2715", "Cross"], ["0x2716", "Cross2"], ["0x2717", "Cross3"], ["0x2718", "Cross4"], ["0x200C", "ZWNJ"]],
+            //extended_valid_elements: "script[src|async|defer|type|charset]"
+        };
         $$("before", function () {
             console.log("TinyMCE: removing editors");
             tinymce.remove("TEXTAREA[data-type='html']");
         });
         $$("process", function () {
             console.log("TinyMCE: initializing editors");
-            tinymce.init({
-                selector: "TEXTAREA[data-type='html']",
-                plugins: "link code fullscreen image charmap lists table hr paste preview print",
-                _removed_from_plugins: 'imagetools',
-                toolbar: 'fullscreen | styleselect bold italic alignleft aligncenter alignright | bullist numlist outdent indent | table link image',
-                _removed_from_toolbar: 'undo redo | hr | charmap | code',
-                menubar: true,
-                paste_as_text: false,
-                convert_urls: false,
-                image_list: [],
-                charmap_append: [["0x2713", "Checkmark"], ["0x2714", "Checkmark2"], ["0x2715", "Cross"], ["0x2716", "Cross2"], ["0x2717", "Cross3"], ["0x2718", "Cross4"], ["0x200C", "ZWNJ"]],
-                //extended_valid_elements: "script[src|async|defer|type|charset]"
+            var settings = Object.assign({}, tinymcy_defaults);
+            settings.selector = "TEXTAREA[data-type='html']";
+            tinymce.init(settings);
+        });
+        $(function () {
+            $(document).on("change", "INPUT[type=checkbox][onchecked-showhtmlsource]", function () {
+                var $target = sircl.ext.$select($(this), this.getAttribute("onchecked-showhtmlsource"));
+                var targetId = sircl.ext.getId($target[0]);
+                if (this.checked) {
+                    $target.attr("data-type", null);
+                    tinymce.remove("#" + targetId);
+                } else {
+                    $target.attr("data-type", "html");
+                    var settings = Object.assign({}, tinymcy_defaults);
+                    settings.selector = "#" + targetId;
+                    tinymce.init(settings);
+                }
             });
         });
 

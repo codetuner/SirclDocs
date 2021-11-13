@@ -4,6 +4,7 @@
 @inject SirclDocs.Website.Data.Content.ContentDbContext context
 @{
     Layout = "_Layout";
+    ViewData["Title"] = Html.Content("Title");
     //IgnoreBody();
     var hasToc = Boolean.Parse(Model.Document["HasToc"].Value ?? "False");
     var section = Model.Parents.Where(p => p.Type.Name == "SectionPage").FirstOrDefault();

@@ -1,3 +1,8 @@
-﻿@{
+﻿@if (this.Context.Request.Headers["X-Sircl-Request-Type"] == "Partial")
+{
+    Layout = "_LayoutPart";
+}
+else
+{
     Layout = "_Layout";
 }

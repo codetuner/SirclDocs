@@ -249,3 +249,16 @@ pre.http {
     font-size: 10pt;
     font-weight: normal;
 }
+
+
+/* Pages footer */
+
+.page-footer {
+    color: #d0ffd0;
+    background-color: green;
+    font-weight: bold;
+}
+
+    .page-footer A {
+        color: #d0ffd0;
+    }

@@ -1,0 +1,11 @@
+﻿@model SirclDocs.Website.Models.Content.ContentModel
+@{
+    Layout = null;
+    //IgnoreBody();
+    var cacheControl = Model.Document["Cache-Control"];
+    if (cacheControl != null)
+    {
+        this.Context.Response.Headers["Cache-Control"] = cacheControl.Value;
+    }
+}
+@Html.Content("Body")
