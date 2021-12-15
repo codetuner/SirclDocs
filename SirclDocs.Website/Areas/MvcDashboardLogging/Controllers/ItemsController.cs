@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SirclDocs.Website.Areas.MvcDashboardLogging.Models.Logs;
+using SirclDocs.Website.Areas.MvcDashboardLogging.Models.Items;
 using SirclDocs.Website.Data;
 using SirclDocs.Website.Data.Logging;
 using System;
@@ -12,13 +12,13 @@ using System.Threading.Tasks;
 namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
 {
     [Authorize(Roles = "Administrator,LoggingAdministrator")]
-    public class LogsController : BaseController
+    public class ItemsController : BaseController
     {
         #region Construction
 
         private readonly LoggingDbContext context;
 
-        public LogsController(LoggingDbContext context)
+        public ItemsController(LoggingDbContext context)
         {
             this.context = context;
         }
