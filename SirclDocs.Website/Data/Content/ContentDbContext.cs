@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace SirclDocs.Website.Data.Content
 {
@@ -25,8 +26,13 @@ namespace SirclDocs.Website.Data.Content
             modelBuilder.Entity<Property>()
                 .Property(p => p.Settings)
                 .HasConversion(
-                    v => ToString(v),
-                    v => ToDictionary(v)
+                    v => ContentDbContext.ToString(v),
+                    s => ContentDbContext.ToDictionary(s),
+                    new ValueComparer<Dictionary<string, string>>(
+                        (v1, v2) => String.Equals(ContentDbContext.ToString(v1), ContentDbContext.ToString(v2)),
+                        v => ContentDbContext.ToString(v).GetHashCode(),
+                        v => v.ToDictionary(p => p.Key, p => p.Value)
+                    )
                 );
         }
 
@@ -72,4 +78,4 @@ namespace SirclDocs.Website.Data.Content
 
         #endregion
     }
-}
+    }
