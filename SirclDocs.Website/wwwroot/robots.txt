@@ -1,2 +1,5 @@
-﻿User-agent: *
-Allow: /
+﻿user-agent: *
+disallow: /Identity
+disallow: /Samples
+
+sitemap: https://www.getsircl.com/Sitemap
