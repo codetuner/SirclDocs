@@ -262,3 +262,15 @@ pre.http {
     .page-footer A {
         color: #d0ffd0;
     }
+
+/* Examples */
+
+#rerun-btn {
+    cursor: pointer;
+}
+
+#demo {
+    background: #f0fff0;
+    padding: 4px;
+    border-radius: 4px;
+}

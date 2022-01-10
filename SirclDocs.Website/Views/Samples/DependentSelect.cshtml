@@ -1,0 +1,28 @@
+﻿@model List<string>
+@{
+    Layout = null;
+}
+<form action="/Samples/DependentSelect" method="post">
+
+    <p>
+        <label>Select a continent:</label>
+        <select name="Continent" class="onchange-submit">
+            <option></option>
+            <option value="EU" selected="@(ViewBag.Continent == "EU" ? "selected" : null)">Europe</option>
+            <option value="AM" selected="@(ViewBag.Continent == "AM" ? "selected" : null)">Americas</option>
+            <option value="AS" selected="@(ViewBag.Continent == "AS" ? "selected" : null)">Asia</option>
+        </select>
+    </p>
+
+    <p>
+        <label>Select a country:</label>
+        <select name="Country">
+            @foreach (var country in Model)
+            { 
+                <option>@country</option>
+            }
+        </select>
+    </p>
+
+</form>
+

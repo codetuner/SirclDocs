@@ -1,0 +1,18 @@
+﻿@model SirclDocs.Website.Models.Samples.TaskList
+@{
+    Layout = null;
+}
+<form method="post">
+    @for (int i = 0; i < Model.Tasks.Count; i++)
+    {
+        <p>
+            <input type="hidden" asp-for="Tasks[i]" />
+            <button type="submit" formaction="/Samples/RemoveFromTaskList?index=@i">&times;</button>
+            @Model.Tasks[i]
+        </p>
+    }
+    <p>
+        <input type="text" name="newTask" required />
+        <button type="submit" formaction="/Samples/AddToTaskList">Add</button>
+    </p>
+</form>

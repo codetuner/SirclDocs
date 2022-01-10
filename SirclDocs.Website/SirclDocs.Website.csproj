@@ -21,6 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Views\Samples\TaskList.cshtml" />
+    <None Include="Views\Samples\LizaDonnovan.cshtml" />
+    <None Include="Views\Samples\PeterJohnson.cshtml" />
     <None Include="Views\Samples\BrownFox.cshtml" />
     <None Include="Views\Samples\LoremIpsum.cshtml" />
   </ItemGroup>

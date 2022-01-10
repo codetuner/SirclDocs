@@ -38,7 +38,7 @@ namespace SirclDocs.Website
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
 
-            #region Cors:
+            #region Cors
 
             services.AddCors(options =>
             {
@@ -55,7 +55,7 @@ namespace SirclDocs.Website
 
             #endregion
 
-            #region Content:
+            #region Content
 
             services.AddDbContext<Data.Content.ContentDbContext>(options =>
                 options.UseSqlServer(
@@ -70,6 +70,14 @@ namespace SirclDocs.Website
                     Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddScoped<SirclDocs.Website.Logging.RequestLogger>();
+
+            #endregion
+
+            #region Samples
+
+            services.AddDbContext<Data.Samples.SamplesDbContext>(options =>
+                options.UseSqlServer(
+                    Configuration.GetConnectionString("DefaultConnection")));
 
             #endregion
 
