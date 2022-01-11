@@ -2,5 +2,17 @@
     Layout = null;
 }
 <p>@(ViewBag.Msg ?? "Data saved.")</p>
+@if (ViewBag.ShowData == true)
+{
+    var form = (Microsoft.AspNetCore.Http.IFormCollection)ViewBag.Form;
+    <p>Form data:</p>
+    @foreach (var item in form)
+    {
+        <li><b>@item.Key</b> = '@item.Value'</li>
+    }
+}
+else
+{
 <p>&nbsp;</p>
+}
 <p>&nbsp;</p>

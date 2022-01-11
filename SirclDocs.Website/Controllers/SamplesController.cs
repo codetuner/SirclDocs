@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SirclDocs.Website.Data.Samples;
 using SirclDocs.Website.Models.Samples;
@@ -59,17 +60,17 @@ namespace SirclDocs.Website.Controllers
             var countries = new List<string>();
             switch (Continent)
             {
-                case "EU":
+                case "Europe":
                     countries.Add("Austria");
                     countries.Add("Denmark");
                     countries.Add("Estonia");
                     countries.Add("Finland");
                     break;
-                case "AM":
+                case "Americas":
                     countries.Add("Guatemala");
                     countries.Add("Haiti");
                     break;
-                case "AS":
+                case "Asia":
                     countries.Add("Bangladesh");
                     countries.Add("China");
                     break;
@@ -80,9 +81,11 @@ namespace SirclDocs.Website.Controllers
         }
 
         [HttpGet, HttpPost]
-        public IActionResult Saved(string msg = null)
+        public IActionResult Saved(IFormCollection form, string msg = null, bool showdata = false)
         {
             ViewBag.Msg = msg;
+            ViewBag.ShowData = showdata;
+            ViewBag.Form = form;
             return View("Saved");
         }
 
@@ -91,7 +94,8 @@ namespace SirclDocs.Website.Controllers
         /// </summary>
         public IActionResult AcCompany([FromServices] SamplesDbContext context, string value = "", int take = 12)
         {
-            var model = context.Customers.Where(c => c.CompanyName.Contains(value)).Take(take).Select(c => c.CompanyName).OrderBy(s => s).ToList();
+            var model = context.Customers.Where(c => c.CompanyName.Contains(value)).Take(take).Select(c => c.CompanyName).Distinct().OrderBy(s => s).ToList();
+            if (model.Count == 1 && model[0] == value) model.Clear();
             return View("AcCompany", model);
         }
 

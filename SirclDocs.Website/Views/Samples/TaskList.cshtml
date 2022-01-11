@@ -2,17 +2,16 @@
 @{
     Layout = null;
 }
-<form method="post">
-    @for (int i = 0; i < Model.Tasks.Count; i++)
-    {
-        <p>
-            <input type="hidden" asp-for="Tasks[i]" />
-            <button type="submit" formaction="/Samples/RemoveFromTaskList?index=@i">&times;</button>
-            @Model.Tasks[i]
-        </p>
-    }
+<div class="overlay" hidden></div>
+@for (int i = 0; i < Model.Tasks.Count; i++)
+{
     <p>
-        <input type="text" name="newTask" required />
-        <button type="submit" formaction="/Samples/AddToTaskList">Add</button>
+        <input type="hidden" asp-for="Tasks[i]" />
+        <button type="submit" class="btn btn-light btn-sm" formaction="/Samples/RemoveFromTaskList?index=@i">&times;</button>
+        @Model.Tasks[i]
     </p>
-</form>
+}
+<p>
+    <input type="text" name="newTask" />
+    <button type="submit" class="btn btn-secondary btn-sm" formaction="/Samples/AddToTaskList">Add</button>
+</p>

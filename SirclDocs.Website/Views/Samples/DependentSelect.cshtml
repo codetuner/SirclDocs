@@ -8,20 +8,28 @@
         <label>Select a continent:</label>
         <select name="Continent" class="onchange-submit">
             <option></option>
-            <option value="EU" selected="@(ViewBag.Continent == "EU" ? "selected" : null)">Europe</option>
-            <option value="AM" selected="@(ViewBag.Continent == "AM" ? "selected" : null)">Americas</option>
-            <option value="AS" selected="@(ViewBag.Continent == "AS" ? "selected" : null)">Asia</option>
+            <option selected="@(ViewBag.Continent == "Europe" ? "selected" : null)">Europe</option>
+            <option selected="@(ViewBag.Continent == "Americas" ? "selected" : null)">Americas</option>
+            <option selected="@(ViewBag.Continent == "Asia" ? "selected" : null)">Asia</option>
         </select>
     </p>
 
     <p>
         <label>Select a country:</label>
         <select name="Country">
+            @if (ViewBag.Continent != null)
+            {
+                <option></option>
+            }
             @foreach (var country in Model)
-            { 
+            {
                 <option>@country</option>
             }
         </select>
+    </p>
+
+    <p>
+        <button type="submit" formaction="/Samples/Saved?showdata=true">Save</button>
     </p>
 
 </form>
