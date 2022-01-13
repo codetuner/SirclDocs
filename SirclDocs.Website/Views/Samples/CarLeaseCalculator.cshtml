@@ -1,0 +1,14 @@
+﻿@model SirclDocs.Website.Models.Samples.CarLeaseCalculatorModel
+@{
+    Layout = null;    
+}
+@if (String.IsNullOrEmpty(Model.Model))
+{
+<font size="4"><b>Please select a car model</b></font>
+}
+else
+{
+    <font size="4"><b>Lease duration:  @(Model.Duration) months (@(Model.DurationInYears) year)</b></font>
+    <br />
+    <font size="4"><b>Monthly price: $ @(Model.MonthlyPrice.ToString("#,##0.00"))</b></font>
+}

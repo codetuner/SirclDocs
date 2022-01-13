@@ -106,5 +106,35 @@ namespace SirclDocs.Website.Controllers
         {
             return StatusCode(200);
         }
+
+        public IActionResult CarLeaseCalculator([Bind(Prefix = "")] CarLeaseCalculatorModel form)
+        {
+            if (!String.IsNullOrEmpty(form.Model))
+            {
+                var price = 0m;
+                switch (form.Model)
+                {
+                    case "A":
+                        price = 36_000m;
+                        break;
+                    case "B":
+                        price = 42_000m;
+                        break;
+                    case "G":
+                        price = 48_000m;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("Unknown car model.");
+                }
+                if (form.Color == "B") price += 1_000m;
+                if (form.Options.Contains("MES")) price += 2_000m;
+                if (form.Options.Contains("GPS")) price += 2_000m;
+                if (form.Options.Contains("FSD")) price += 8_000m;
+
+                form.MonthlyPrice = (price * 1.25m) / form.Duration;
+            }
+
+            return View("CarLeaseCalculator", form);
+        }
     }
 }

@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Views\Samples\CarLeaseCalculator.cshtml" />
     <None Include="Views\Samples\TaskList.cshtml" />
     <None Include="Views\Samples\LizaDonnovan.cshtml" />
     <None Include="Views\Samples\PeterJohnson.cshtml" />
