@@ -136,5 +136,30 @@ namespace SirclDocs.Website.Controllers
 
             return View("CarLeaseCalculator", form);
         }
+
+        public IActionResult ConnectionMode(string[] cm)
+        {
+            var result = new List<string>(cm);
+
+            if (result.Contains("FM"))
+            {
+                result.Remove("WIFI");
+                result.Remove("BT");
+            }
+
+            return Json(result.ToArray());
+        }
+
+        public IActionResult ConnectionSpeed(string modes, int value)
+        {
+            if (modes != null && modes.Contains("FM"))
+            {
+                return View("ConnectionSpeedError");
+            }
+            else
+            {
+                return View(value);
+            }
+        }
     }
 }
