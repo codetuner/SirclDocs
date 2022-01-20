@@ -2,48 +2,45 @@
 @{
     Layout = null;
 }
-<form action="/Samples/DataTable" class="onchange-submit">
-    <div>
-        <div class="overlay" hidden></div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <td>Id</td>
-                    <td>Name</td>
-                    <td>Phone</td>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Items)
-            {
-                <tr>
-                    <td>@item.Id</td>
-                    <td>@item.CompanyName</td>
-                    <td>@item.Phone</td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    </div>
+<div>
+    <div class="overlay" hidden></div>
+    <table class="table">
+        <thead>
+            <tr>
+                <td>Id</td>
+                <td>Name</td>
+                <td>Phone</td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.CompanyName</td>
+                <td>@item.Phone</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
 
-    <select name="pagesize" class="form-control float-end" style="width: 52px;">
-        <option selected="@(Model.PageSize == 3 ? "selected" : null)">3</option>
-        <option selected="@(Model.PageSize == 5 ? "selected" : null)">5</option>
-        <option selected="@(Model.PageSize == 10 ? "selected" : null)">10</option>
-    </select>
+<select name="pagesize" class="form-control float-end" style="width: 52px;">
+    <option selected="@(Model.PageSize == 3 ? "selected" : null)">3</option>
+    <option selected="@(Model.PageSize == 5 ? "selected" : null)">5</option>
+    <option selected="@(Model.PageSize == 10 ? "selected" : null)">10</option>
+</select>
 
-    <nav>
-        <ul class="pagination">
-            @for (int p = 1; p <= Model.LastPage; p++)
-            {
-            <li class="page-item@(p == Model.Page ? " active" : "")">
-                <label class="page-link">
-                    <input type="radio" name="page" value="@p" />
-                    @p
-                </label>
-            </li>
-            }
-        </ul>
-    </nav>
-
-</form>
+<nav>
+    <ul class="pagination">
+        @for (int p = 1; p <= Model.LastPage; p++)
+        {
+        <li class="page-item@(p == Model.Page ? " active" : "")">
+            <label class="page-link">
+                <input type="radio" name="page" value="@p" />
+                @p
+            </label>
+        </li>
+        }
+    </ul>
+</nav>
