@@ -176,5 +176,32 @@ namespace SirclDocs.Website.Controllers
 
             return View(model);
         }
+
+        public IActionResult DataTableWithSelection([FromServices] SamplesDbContext context, int page = 1, int pagesize = 3, string q = null)
+        {
+            var model = new DataTable<Customer>();
+            model.Page = page;
+            model.PageSize = pagesize;
+            model.Query = q;
+            var query = context.Customers
+                .Where(c => c.Id < 11)
+                .Where(c => q == null || c.CompanyName.Contains(q));
+            model.LastPage = (query.Count() + pagesize - 1) / pagesize;
+            model.Items = query.OrderBy(c => c.Id).Skip((page - 1) * pagesize).Take(pagesize).ToArray();
+
+            return View(model);
+        }
+
+        public IActionResult DataTableSelection([FromServices] SamplesDbContext context, int[] selection = null)
+        {
+            selection = selection ?? Array.Empty<int>();
+            var model = new DataTable<Customer>();
+            var query = context.Customers
+                .Where(c => c.Id < 11)
+                .Where(c => selection.Contains(c.Id));
+            model.Items = query.OrderBy(c => c.Id).ToArray();
+
+            return View("DataTableSelection", model);
+        }
     }
 }

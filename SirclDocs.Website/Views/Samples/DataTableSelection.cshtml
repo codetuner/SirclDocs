@@ -1,0 +1,11 @@
+﻿@model SirclDocs.Website.Models.Samples.DataTable<SirclDocs.Website.Data.Samples.Customer>
+@{
+    Layout = null;
+}
+<p>Following companies were selected:</p>
+<ul>
+    @foreach (var item in Model.Items)
+    { 
+        <li>@item.CompanyName</li>
+    }
+</ul>

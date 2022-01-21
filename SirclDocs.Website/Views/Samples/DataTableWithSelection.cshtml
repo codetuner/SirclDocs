@@ -7,6 +7,11 @@
     <table class="table">
         <thead>
             <tr>
+                <th>
+                    <input type="checkbox" class="onchange-nosubmit"
+                           ifchecked-check="<TABLE|[name='selection']"
+                           ifunchecked-uncheck="<TABLE|[name='selection']">
+                </th>
                 <th>Id</th>
                 <th>Name</th>
                 <th>Phone</th>
@@ -16,6 +21,10 @@
             @foreach (var item in Model.Items)
             {
             <tr>
+                <td>
+                    <input type="checkbox" name="selection" value="@item.Id"
+                            class="onchange-nosubmit">
+                </td>
                 <td>@item.Id</td>
                 <td>@item.CompanyName</td>
                 <td>@item.Phone</td>
@@ -44,3 +53,12 @@
         }
     </ul>
 </nav>
+
+<p>
+    <button type="submit" class="btn btn-primary"
+            formaction="/Samples/DataTableSelection" formtarget="#demo"
+            enable-ifanychecked="<FORM|[name='selection']">
+        <i class="spinner fas fa-download"></i>
+        Export
+    </button>
+</p>
