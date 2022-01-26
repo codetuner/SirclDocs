@@ -1,0 +1,67 @@
+﻿@model SirclDocs.Website.Models.Samples.DataTable<SirclDocs.Website.Data.Samples.Customer>
+@{
+    Layout = null;
+    int i = 0;
+}
+@if (Model.Items.Length > 0)
+{
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">@Model.Items[i].Id @Model.Items[i].CompanyName</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">@Model.Items[i].FirstName @Model.Items[i].LastName</h6>
+                    <p class="card-text">@Model.Items[i].Phone</p>
+                </div>
+            </div>
+        </div>
+        @{ i++; }
+        <div class="col">
+            @if (Model.Items.Length > 1)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Items[i].Id @Model.Items[i].CompanyName</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@Model.Items[i].FirstName @Model.Items[i].LastName</h6>
+                        <p class="card-text">@Model.Items[i].Phone</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    { i++; }
+    if (Model.Items.Length > 2)
+    {
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Items[i].Id @Model.Items[i].CompanyName</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@Model.Items[i].FirstName @Model.Items[i].LastName</h6>
+                        <p class="card-text">@Model.Items[i].Phone</p>
+                    </div>
+                </div>
+            </div>
+            @{ i++; }
+            <div class="col">
+                @if (Model.Items.Length > 3)
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">@Model.Items[i].Id @Model.Items[i].CompanyName</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">@Model.Items[i].FirstName @Model.Items[i].LastName</h6>
+                            <p class="card-text">@Model.Items[i].Phone</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    @if (Model.Items.Length == Model.PageSize)
+    {
+        <div ifinview-load="/Samples/InfiniteScroll?toskip=@(Model.Page + Model.PageSize)">
+            Loading more...
+        </div>
+    }
+}
+@{ i++; }

@@ -9,8 +9,8 @@
             <tr>
                 <th>
                     <input type="checkbox" class="onchange-nosubmit"
-                           ifchecked-check="<TABLE|[name='selection']"
-                           ifunchecked-uncheck="<TABLE|[name='selection']">
+                           ifchecked-check="<TABLE|>[name='selection']"
+                           ifunchecked-uncheck="<TABLE|>[name='selection']">
                 </th>
                 <th>Id</th>
                 <th>Name</th>
@@ -57,7 +57,7 @@
 <p>
     <button type="submit" class="btn btn-primary"
             formaction="/Samples/DataTableSelection" formtarget="#demo"
-            enable-ifanychecked="<FORM|[name='selection']">
+            enable-ifanychecked="<FORM|>[name='selection']">
         <i class="spinner fas fa-download"></i>
         Export
     </button>

@@ -203,5 +203,19 @@ namespace SirclDocs.Website.Controllers
 
             return View("DataTableSelection", model);
         }
+
+        public IActionResult InfiniteScroll([FromServices] SamplesDbContext context, int toskip = 0)
+        {
+            var model = new DataTable<Customer>();
+            model.Page = toskip;
+            model.PageSize = 4;
+            var query = context.Customers
+                .Where(c => c.Id <= 120)
+                .OrderBy(c => c.Id)
+                .Skip(toskip).Take(model.PageSize);
+            model.Items = query.ToArray();
+
+            return View(model);
+        }
     }
 }
