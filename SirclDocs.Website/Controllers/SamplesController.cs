@@ -13,14 +13,14 @@ namespace SirclDocs.Website.Controllers
     [EnableCors("SamplesPolicy")]
     public class SamplesController : Controller
     {
-        public IActionResult BrownFox()
+        public IActionResult BrownFox(int opt = 0)
         {
-            return View();
+            return View(opt);
         }
 
-        public IActionResult LoremIpsum()
+        public IActionResult LoremIpsum(int opt = 0)
         {
-            return View();
+            return View(opt);
         }
 
         public IActionResult LizaDonnovan()
@@ -216,6 +216,105 @@ namespace SirclDocs.Website.Controllers
             model.Items = query.ToArray();
 
             return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult TaskBoard()
+        {
+            return View(new TaskBoardModel());
+        }
+
+        [HttpPost]
+        public IActionResult TaskBoard(TaskBoardModel model)
+        {
+            return View("TaskBoard", model);
+        }
+
+        [HttpPost]
+        public IActionResult TaskBoardAdd(TaskBoardModel model)
+        {
+            if (String.IsNullOrWhiteSpace(model.NewTask.Label))
+                ModelState.AddModelError("NewTask.Label", "Please enter a label for the task.");
+            if (model.NewTask.Estimate < 0)
+                ModelState.AddModelError("NewTask.Estimate", "Estimate cannot be negative.");
+
+            if (ModelState.IsValid)
+            {
+                ModelState.Clear();
+                model.NewTask.Id = model.NextId++;
+                model.Todos.Add(model.NewTask);
+                model.NewTask = new();
+                Response.Headers["X-Sircl-Target"] = "#demo";
+                return TaskBoard(model);
+            }
+            else
+            {
+                return View("TaskBoardAddModal", model);
+            }
+        }
+
+        [HttpPost]
+        public IActionResult TaskBoardRemove(TaskBoardModel model, int id)
+        {
+            if (model.Todos.Any(t => t.Id == id))
+            {
+                model.Todos.RemoveAll(t => t.Id == id);
+            }
+            else if (model.Doings.Any(t => t.Id == id))
+            {
+                model.Doings.RemoveAll(t => t.Id == id);
+            }
+            else if (model.Dones.Any(t => t.Id == id))
+            {
+                model.Dones.RemoveAll(t => t.Id == id);
+            }
+
+            ModelState.Clear();
+
+            return TaskBoard(model);
+        }
+
+        [HttpPost]
+        public IActionResult TaskBoardDrop(TaskBoardModel model, int droppedid, int zone)
+        {
+            TaskBoardItem item = null;
+            if (model.Todos.Any(t => t.Id == droppedid))
+            {
+                item = model.Todos.Where(t => t.Id == droppedid).SingleOrDefault();
+                model.Todos.RemoveAll(t => t.Id == droppedid);
+            }
+            else if (model.Doings.Any(t => t.Id == droppedid))
+            {
+                item = model.Doings.Where(t => t.Id == droppedid).SingleOrDefault();
+                model.Doings.RemoveAll(t => t.Id == droppedid);
+            }
+            else if (model.Dones.Any(t => t.Id == droppedid))
+            {
+                item = model.Dones.Where(t => t.Id == droppedid).SingleOrDefault();
+                model.Dones.RemoveAll(t => t.Id == droppedid);
+            }
+
+            if (item != null)
+            {
+                switch (zone)
+                {
+                    case 0:
+                        model.Todos.Add(item);
+                        break;
+                    case 1:
+                        model.Doings.Add(item);
+                        break;
+                    case 2:
+                        model.Dones.Add(item);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("zone");
+                }
+            }
+
+            ModelState.Clear();
+
+            return TaskBoard(model);
         }
     }
 }

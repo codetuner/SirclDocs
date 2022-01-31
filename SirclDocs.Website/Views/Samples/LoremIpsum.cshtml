@@ -1,4 +1,5 @@
-﻿@{
+﻿@model int
+@{
     Layout = null;
 }
 <p>
@@ -8,3 +9,9 @@
     voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
     non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 </p>
+@if (Model == 1)
+{
+    var tzdiff = Int32.Parse(this.Context.Request.Headers["X-Sircl-Timezone-Offset"].ToString() ?? "0");
+    var now = DateTime.UtcNow.AddMinutes(-tzdiff);
+    <p>@(now.ToString("HH:mm:ss"))</p>
+}

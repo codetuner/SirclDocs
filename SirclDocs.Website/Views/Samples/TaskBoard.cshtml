@@ -1,0 +1,104 @@
+﻿@model SirclDocs.Website.Models.Samples.TaskBoardModel
+<form action="/Samples/TaskBoard" method="post" onkeyenter-click="">
+    <input class="drop-value" type="hidden" name="droppedid" />
+    <input type="hidden" asp-for="NextId" />
+    <div class="row">
+        <div class="col alert alert-info">
+            <b>To do</b>
+            <button type="button" class="btn btn-primary btn-sm" onkeydown-click="+"
+                    data-bs-toggle="modal" data-bs-target="#newTodoModal">
+                <i class="fas fa-plus spinner"></i> Add...
+            </button>
+        </div>
+        <div class="col alert alert-info"><b>Doing</b></div>
+        <div class="col alert alert-info"><b>Done</b></div>
+    </div>
+    <div class="row">
+        <div class="col ondrop-submit"
+             ondrop-accept="doing done"
+             ondragover-addclass="drop-zone"
+             formaction="/Samples/TaskBoardDrop?zone=0">
+            @for (int i = 0; i < Model.Todos.Count; i++)
+            {
+                <input type="hidden" asp-for="Todos[i].Id" />
+                <input type="hidden" asp-for="Todos[i].Label" />
+                <input type="hidden" asp-for="Todos[i].Estimate" />
+                <div class="card mb-3" draggable="true" drop-type="todo" drop-value="@Model.Todos[i].Id">
+                    <div class="card-body">
+                        <span class="float-end">
+                            <button type="submit" class="btn btn-light btn-sm"
+                                    formaction="/Samples/TaskBoardRemove?id=@Model.Todos[i].Id"
+                                    onclick-confirm="Delete '@Model.Todos[i].Label' ?">
+                                &times;
+                            </button>
+                        </span>
+                        <h5 class="card-title">@Model.Todos[i].Label</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Estimate: @Model.Todos[i].Estimate</h6>
+                        @*<p class="card-text"></p>*@
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col ondrop-submit"
+             ondrop-accept="todo done"
+             ondragover-addclass="drop-zone"
+             formaction="/Samples/TaskBoardDrop?zone=1">
+            @for (int i = 0; i < Model.Doings.Count; i++)
+            {
+                <input type="hidden" asp-for="Doings[i].Id" />
+                <input type="hidden" asp-for="Doings[i].Label" />
+                <input type="hidden" asp-for="Doings[i].Estimate" />
+                <div class="card mb-3" draggable="true" drop-type="doing" drop-value="@Model.Doings[i].Id">
+                    <div class="card-body">
+                        <span class="float-end">
+                            <button type="submit" class="btn btn-light btn-sm"
+                                    formaction="/Samples/TaskBoardRemove?id=@Model.Doings[i].Id"
+                                    onclick-confirm="Delete '@Model.Doings[i].Label' ?">
+                                &times;
+                            </button>
+                        </span>
+                        <h5 class="card-title">@Model.Doings[i].Label</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Estimate: @Model.Doings[i].Estimate</h6>
+                        @*<p class="card-text"></p>*@
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col ondrop-submit"
+             ondrop-accept="todo doing"
+             ondragover-addclass="drop-zone"
+             formaction="/Samples/TaskBoardDrop?zone=2">
+            @for (int i = 0; i < Model.Dones.Count; i++)
+            {
+                <input type="hidden" asp-for="Dones[i].Id" />
+                <input type="hidden" asp-for="Dones[i].Label" />
+                <input type="hidden" asp-for="Dones[i].Estimate" />
+                <div class="card mb-3" draggable="true" drop-type="done" drop-value="@Model.Dones[i].Id">
+                    <div class="card-body">
+                        <span class="float-end">
+                            <button type="submit" class="btn btn-light btn-sm"
+                                    formaction="/Samples/TaskBoardRemove?id=@Model.Dones[i].Id"
+                                    onclick-confirm="Delete '@Model.Dones[i].Label' ?">
+                                &times;
+                            </button>
+                        </span>
+                        <h5 class="card-title">@Model.Dones[i].Label</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Estimate: @Model.Dones[i].Estimate</h6>
+                        @*<p class="card-text"></p>*@
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">Total estimate: @(Model.Todos.Sum(t => t.Estimate))</div>
+        <div class="col">Total estimate: @(Model.Doings.Sum(t => t.Estimate))</div>
+        <div class="col">Total estimate: @(Model.Dones.Sum(t => t.Estimate))</div>
+    </div>
+
+    <div class="modal fade onclose-restore" id="newTodoModal" tabindex="-1">
+        <div class="modal-dialog target">
+            <partial name="TaskBoardAddModal" model="Model" />
+        </div>
+    </div>
+</form>

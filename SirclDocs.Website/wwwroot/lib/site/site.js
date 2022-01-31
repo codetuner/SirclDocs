@@ -4,7 +4,19 @@
 // EXAMPLES:
 ////////////
 
+// Rerun button:
 $(document).on("click", "#rerun-btn", function () { $("#demo").html($("#demo-template").html()); });
+
+// Delay loadings:
+sircl.addRequestHandler("beforeSend", function(req) {
+    if (req.$initialTarget.closest(".loaddelay500").length > 0) {
+        window.setTimeout(function (processor, req) { processor.next(req); }, 500, this, req);
+    } else if (req.$initialTarget.closest(".loaddelay1000").length > 0) {
+        window.setTimeout(function (processor, req) { processor.next(req); }, 1000, this, req);
+   } else {
+        this.next(req);
+   }
+});
 
 // TABLE OF CONTENT:
 ////////////////////
