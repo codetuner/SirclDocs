@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SirclDocs.Website.Data;
 using SirclDocs.Website.Logging;
+using SirclDocs.Website.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -81,6 +83,19 @@ namespace SirclDocs.Website
 
             #endregion
 
+            #region SMTP
+            
+            services.AddTransient<IEmailSender, SmtpEmailSender>(i =>
+                new SmtpEmailSender(
+                    Configuration["SmtpEmailSender:Host"],
+                    Configuration.GetValue<int>("SmtpEmailSender:Port"),
+                    Configuration.GetValue<bool>("SmtpEmailSender:EnableSSL"),
+                    Configuration["SmtpEmailSender:UserName"],
+                    Configuration["no-reply@getsircl.com"] // Retrieved from appsettings, Secrets, Environment Variables,...
+                )
+            );
+
+            #endregion
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
