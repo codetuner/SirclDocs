@@ -1,6 +1,5 @@
 ﻿@model SirclDocs.Website.Models.Samples.TaskBoardModel
 <form action="/Samples/TaskBoard" method="post" onkeyenter-click="">
-    <input class="drop-value" type="hidden" name="droppedid" />
     <input type="hidden" asp-for="NextId" />
     <div class="row">
         <div class="col alert alert-info">
@@ -17,7 +16,7 @@
         <div class="col ondrop-submit"
              ondrop-accept="doing done"
              ondragover-addclass="drop-zone"
-             formaction="/Samples/TaskBoardDrop?zone=0">
+             formaction="/Samples/TaskBoardDrop?id={drop-value}&zone=0">
             @for (int i = 0; i < Model.Todos.Count; i++)
             {
                 <input type="hidden" asp-for="Todos[i].Id" />
@@ -42,7 +41,7 @@
         <div class="col ondrop-submit"
              ondrop-accept="todo done"
              ondragover-addclass="drop-zone"
-             formaction="/Samples/TaskBoardDrop?zone=1">
+             formaction="/Samples/TaskBoardDrop?id={drop-value}&zone=1">
             @for (int i = 0; i < Model.Doings.Count; i++)
             {
                 <input type="hidden" asp-for="Doings[i].Id" />
@@ -67,7 +66,7 @@
         <div class="col ondrop-submit"
              ondrop-accept="todo doing"
              ondragover-addclass="drop-zone"
-             formaction="/Samples/TaskBoardDrop?zone=2">
+             formaction="/Samples/TaskBoardDrop?id={drop-value}&zone=2">
             @for (int i = 0; i < Model.Dones.Count; i++)
             {
                 <input type="hidden" asp-for="Dones[i].Id" />

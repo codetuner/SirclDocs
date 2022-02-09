@@ -275,23 +275,23 @@ namespace SirclDocs.Website.Controllers
         }
 
         [HttpPost]
-        public IActionResult TaskBoardDrop(TaskBoardModel model, int droppedid, int zone)
+        public IActionResult TaskBoardDrop(TaskBoardModel model, int id, int zone)
         {
             TaskBoardItem item = null;
-            if (model.Todos.Any(t => t.Id == droppedid))
+            if (model.Todos.Any(t => t.Id == id))
             {
-                item = model.Todos.Where(t => t.Id == droppedid).SingleOrDefault();
-                model.Todos.RemoveAll(t => t.Id == droppedid);
+                item = model.Todos.Where(t => t.Id == id).SingleOrDefault();
+                model.Todos.RemoveAll(t => t.Id == id);
             }
-            else if (model.Doings.Any(t => t.Id == droppedid))
+            else if (model.Doings.Any(t => t.Id == id))
             {
-                item = model.Doings.Where(t => t.Id == droppedid).SingleOrDefault();
-                model.Doings.RemoveAll(t => t.Id == droppedid);
+                item = model.Doings.Where(t => t.Id == id).SingleOrDefault();
+                model.Doings.RemoveAll(t => t.Id == id);
             }
-            else if (model.Dones.Any(t => t.Id == droppedid))
+            else if (model.Dones.Any(t => t.Id == id))
             {
-                item = model.Dones.Where(t => t.Id == droppedid).SingleOrDefault();
-                model.Dones.RemoveAll(t => t.Id == droppedid);
+                item = model.Dones.Where(t => t.Id == id).SingleOrDefault();
+                model.Dones.RemoveAll(t => t.Id == id);
             }
 
             if (item != null)
