@@ -1,0 +1,15 @@
+﻿@model SirclDocs.Website.Models.Samples.Recipe
+@{
+    Layout = null;
+}
+<div class="card mb-3">
+    <div class="card-body">
+        <button type="button" class="btn btn-light float-end"
+                onclick-remove="<.card"
+                onclick-confirm="Are you sure ?">
+            &times;
+        </button>
+        <h5 class="card-title">@(Model.Name)</h5>
+        <h6 class="card-subtitle mb-2 text-muted">@(Model.Ingredients.Count) ingredient(s)</h6>
+    </div>
+</div>

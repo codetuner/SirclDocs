@@ -59,7 +59,7 @@
     }
     @if (Model.Items.Length == Model.PageSize)
     {
-        <div ifinview-load="/Samples/InfiniteScroll?toskip=@(Model.Page + Model.PageSize)">
+        <div ifinview-load="/Samples/InfiniteScroll?toskip=@(Model.Page + Model.PageSize)" target-method="replace">
             Loading more...
         </div>
     }

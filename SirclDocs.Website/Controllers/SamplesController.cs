@@ -162,6 +162,8 @@ namespace SirclDocs.Website.Controllers
             }
         }
 
+        #region DataTable samples
+
         public IActionResult DataTable([FromServices] SamplesDbContext context, int page = 1, int pagesize = 3, string q = null)
         {
             var model = new DataTable<Customer>();
@@ -204,6 +206,10 @@ namespace SirclDocs.Website.Controllers
             return View("DataTableSelection", model);
         }
 
+        #endregion
+
+        #region InfiniteScroll sample
+
         public IActionResult InfiniteScroll([FromServices] SamplesDbContext context, int toskip = 0)
         {
             var model = new DataTable<Customer>();
@@ -217,6 +223,10 @@ namespace SirclDocs.Website.Controllers
 
             return View(model);
         }
+
+        #endregion
+
+        #region TaskBoard sample
 
         [HttpGet]
         public IActionResult TaskBoard()
@@ -316,5 +326,94 @@ namespace SirclDocs.Website.Controllers
 
             return TaskBoard(model);
         }
+
+        #endregion
+
+        #region RecipeBook sample
+
+        private string[] ingredients = new string[] { "Water", "Milk", "Olive Oil", "Eggs", "Flour", "Baking Powder", "Butter", "Salt", "Sugar", "Yeast", "Cocoa Powder", "Raisins", "Gelatin", "Cream" };
+
+        public IActionResult RecipeBook()
+        {
+            return View("RecipeBook");
+        }
+
+        public IActionResult RecipeBookAdd()
+        {
+            var model = new Recipe();
+            return RecipeModalView(model);
+        }
+
+        [HttpPost]
+        public IActionResult RecipeAddLine(Recipe model)
+        {
+            ModelState.Clear();
+
+            if (String.IsNullOrWhiteSpace(model.NewIngredient.Dosage))
+            {
+                ModelState.AddModelError("NewIngredient.Dosage", "Dosage required.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                model.Ingredients.Add(model.NewIngredient);
+                model.NewIngredient = new IngredientItem();
+                return RecipeModalView(model);
+            }
+            else
+            {
+                return RecipeModalView(model);
+            }
+        }
+
+        [HttpPost]
+        public IActionResult RecipeModalRemoveLine(Recipe model, int index)
+        {
+            ModelState.Clear();
+
+            model.Ingredients.RemoveAt(index);
+
+            return RecipeModalView(model);
+        }
+
+        private IActionResult RecipeModalView(Recipe model)
+        {
+            model.AvailableIngredients = ingredients.Except(model.Ingredients.Select(i => i.Name)).OrderBy(i => i).ToList();
+            return View("RecipeModal", model);
+        }
+
+        [HttpPost]
+        public IActionResult RecipeBookSave(Recipe model)
+        {
+            if (String.IsNullOrWhiteSpace(model.Name))
+            {
+                ModelState.AddModelError("Name", "Name required.");
+            }
+
+            if (model.Ingredients.Count == 0 && String.IsNullOrWhiteSpace(model.NewIngredient.Dosage))
+            {
+                ModelState.AddModelError("", "Recipe must have at least one ingredient.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                if (!String.IsNullOrWhiteSpace(model.NewIngredient.Dosage))
+                {
+                    model.Ingredients.Add(model.NewIngredient);
+                }
+
+                model.Id = Environment.TickCount;
+
+                Response.Headers.Add("X-Sircl-Target", "#recipe-list");
+                Response.Headers.Add("X-Sircl-Target-Method", "append");
+                return View("Recipe", model);
+            }
+            else
+            {
+                return RecipeModalView(model);
+            }
+        }
+
+        #endregion
     }
 }

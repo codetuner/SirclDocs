@@ -1,0 +1,71 @@
+﻿@model SirclDocs.Website.Models.Samples.Recipe
+@{
+    Layout = null;
+}
+<div class="modal-dialog">
+    <div class="modal-content">
+        <form class="onsubmit-disable" action="/Samples/RecipeBookSave" method="post" onkeyenter-click="#save-btn">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Recipe</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div asp-validation-summary="All" class="alert alert-danger">
+                    <button type="button" onclick-remove="<DIV" class="float-end btn btn-light btn-sm">&times;</button>
+                    <div>Please fix following errors:</div>
+                </div>
+                <div class="mb-3">
+                    <label for="Name" class="form-label">Name</label>
+                    <input type="text" class="form-control" asp-for="Name" autofocus="@(String.IsNullOrWhiteSpace(Model.Name) ? "autofocus" : null)" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div onkeyenter-click="#addline-btn">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th>Ingredient</th>
+                            <th>Dosage</th>
+                        </tr>
+                        @for (int i = 0; i < Model.Ingredients.Count; i++)
+                        {
+                            <tr>
+                                <td>
+                                    @Model.Ingredients[i].Name
+                                    <input type="hidden" asp-for="Ingredients[i].Name" />
+                                </td>
+                                <td>
+                                    @Model.Ingredients[i].Dosage
+                                    <input type="hidden" asp-for="Ingredients[i].Dosage" />
+                                    <span asp-validation-for="Ingredients[i].Dosage" class="text-danger"></span>
+                                    <span class="float-end">
+                                        <button type="submit" class="btn btn-light btn-sm" formaction="/Samples/RecipeModalRemoveLine?index=i">&times;</button>
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        <tr>
+                            <td>
+                                <select class="form-control" asp-for="NewIngredient.Name" autofocus>
+                                    @foreach (var ai in Model.AvailableIngredients)
+                                    {
+                                        <option>@ai</option>
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" asp-for="NewIngredient.Dosage" autofocus="@(!String.IsNullOrWhiteSpace(Model.Name) ? "autofocus" : null)" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" align="right">
+                                <button id="addline-btn" type="submit" class="btn btn-secondary btn-sm" formaction="/Samples/RecipeAddLine">Add line</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-btn" type="submit" class="btn btn-primary"><i class="fas fa-save spinner"></i> Save</button>
+            </div>
+        </form>
+    </div>
+</div>
