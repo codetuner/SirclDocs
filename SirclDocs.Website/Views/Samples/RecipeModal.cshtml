@@ -37,7 +37,7 @@
                                     <input type="hidden" asp-for="Ingredients[i].Dosage" />
                                     <span asp-validation-for="Ingredients[i].Dosage" class="text-danger"></span>
                                     <span class="float-end">
-                                        <button type="submit" class="btn btn-light btn-sm" formaction="/Samples/RecipeModalRemoveLine?index=i">&times;</button>
+                                        <button type="submit" class="btn btn-light btn-sm" formaction="/Samples/RecipeModalRemoveLine?index=@i">&times;</button>
                                     </span>
                                 </td>
                             </tr>

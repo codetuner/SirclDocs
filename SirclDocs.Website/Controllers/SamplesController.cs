@@ -13,6 +13,8 @@ namespace SirclDocs.Website.Controllers
     [EnableCors("SamplesPolicy")]
     public class SamplesController : Controller
     {
+        #region Shared sample actions
+
         public IActionResult BrownFox(int opt = 0)
         {
             return View(opt);
@@ -32,6 +34,27 @@ namespace SirclDocs.Website.Controllers
         {
             return View();
         }
+
+        [HttpGet, HttpPost]
+        public IActionResult Saved(IFormCollection form, string msg = null, bool showdata = false)
+        {
+            ViewBag.Msg = msg;
+            ViewBag.ShowData = showdata;
+            ViewBag.Form = form;
+            return View("Saved");
+        }
+
+        /// <summary>
+        /// Change actions save change.
+        /// </summary>
+        public IActionResult SaveChange(string name = null, string value = null, bool? @checked = null)
+        {
+            return StatusCode(200);
+        }
+
+        #endregion
+
+        #region TaskList sample
 
         public IActionResult TaskList()
         {
@@ -53,6 +76,10 @@ namespace SirclDocs.Website.Controllers
             model.Tasks.RemoveAt(index);
             return View("TaskList", model);
         }
+
+        #endregion
+
+        #region DependentSelect sample
 
         [HttpGet, HttpPost]
         public IActionResult DependentSelect(string Continent = null)
@@ -80,14 +107,9 @@ namespace SirclDocs.Website.Controllers
             return View("DependentSelect", countries);
         }
 
-        [HttpGet, HttpPost]
-        public IActionResult Saved(IFormCollection form, string msg = null, bool showdata = false)
-        {
-            ViewBag.Msg = msg;
-            ViewBag.ShowData = showdata;
-            ViewBag.Form = form;
-            return View("Saved");
-        }
+        #endregion
+
+        #region AutoComplete sample
 
         /// <summary>
         /// Auto-Complete companies
@@ -99,13 +121,9 @@ namespace SirclDocs.Website.Controllers
             return View("AcCompany", model);
         }
 
-        /// <summary>
-        /// Change actions save change.
-        /// </summary>
-        public IActionResult SaveChange(string name = null, string value = null, bool? @checked = null)
-        {
-            return StatusCode(200);
-        }
+        #endregion
+
+        #region CarLeaseCalculator sample
 
         public IActionResult CarLeaseCalculator([Bind(Prefix = "")] CarLeaseCalculatorModel form)
         {
@@ -137,6 +155,10 @@ namespace SirclDocs.Website.Controllers
             return View("CarLeaseCalculator", form);
         }
 
+        #endregion
+
+        #region ChangeActions sample
+
         public IActionResult ConnectionMode(string[] cm)
         {
             var result = new List<string>(cm);
@@ -161,6 +183,8 @@ namespace SirclDocs.Website.Controllers
                 return View(value);
             }
         }
+
+        #endregion
 
         #region DataTable samples
 
@@ -226,7 +250,7 @@ namespace SirclDocs.Website.Controllers
 
         #endregion
 
-        #region TaskBoard sample
+        #region TaskBoard Drag&Drop sample
 
         [HttpGet]
         public IActionResult TaskBoard()
