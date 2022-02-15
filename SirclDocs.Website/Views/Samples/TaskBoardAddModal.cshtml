@@ -1,23 +1,26 @@
 ﻿@model SirclDocs.Website.Models.Samples.TaskBoardModel
-    <div class="modal-content" onkeyenter-click=">[type='submit'] :first">
-        <div class="modal-header">
-            <h5 class="modal-title">Add task</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal-content" onkeyenter-click=">[type='submit'] :first">
+    <div class="modal-header">
+        <h5 class="modal-title">Add task</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        <div asp-validation-summary="All" class="alert alert-danger">
+            <button type="button" onclick-remove="<DIV" class="float-end btn btn-light btn-sm">&times;</button>
+            <div>Please fix following errors:</div>
         </div>
-        <div class="modal-body">
-            <div asp-validation-summary="All"></div>
-            <div class="mb-3">
-                <label asp-for="NewTask.Label" class="form-label">Task label</label>
-                <input asp-for="NewTask.Label" type="text" class="form-control" autofocus>
-            </div>
-            <div class="mb-3">
-                <label asp-for="NewTask.Estimate" class="form-label">Estimation</label>
-                <input asp-for="NewTask.Estimate" type="number" class="form-control">
-            </div>
+        <div class="mb-3">
+            <label asp-for="NewTask.Label" class="form-label">Task label</label>
+            <input asp-for="NewTask.Label" type="text" class="form-control" autofocus>
         </div>
-        <div class="modal-footer">
-            <button type="submit" class="btn btn-primary" formaction="/Samples/TaskBoardAdd">
-                <i class="spinner"></i> Add
-            </button>
+        <div class="mb-3">
+            <label asp-for="NewTask.Estimate" class="form-label">Estimation</label>
+            <input asp-for="NewTask.Estimate" type="number" class="form-control">
         </div>
     </div>
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-primary" formaction="/Samples/TaskBoardAdd">
+            <i class="spinner"></i> Add
+        </button>
+    </div>
+</div>
