@@ -1,0 +1,79 @@
+﻿@model SirclDocs.Website.Models.Samples.ExpenseModel
+@{
+    Layout = null;
+}
+
+<div class="overlay" hidden></div>
+<form action="/Samples/Expense" method="post" class="onsubmit-disable">
+
+    <div asp-validation-summary="All">
+        <div>Please fix following errors:</div>
+    </div>
+
+    <table width="100%" cellspacing="8" cellpadding="8">
+        <tbody>
+            <tr>
+                <td width="20%">Description:</td>
+                <td width="80%"><input asp-for="Item.Description" /></td>
+            </tr>
+            <tr>
+                <td>Cost center:</td>
+                <td>
+                    <select asp-for="Item.CostCenter" asp-items="Model.CostCenters"></select>
+                </td>
+            </tr>
+            <tr>
+                <td>Manager:</td>
+                <td>
+                    <select asp-for="Item.Manger" asp-items="Model.Managers"></select>
+                </td>
+            </tr>
+            <tr>
+                <td valign="top">Payment method:</td>
+                <td>
+                    <label><input type="radio" name="Item.PaymentMethod" value="0" checked="@(Model.Item.PaymentMethod == 0 ? "chekced" : null)" /> By crediting credit card</label><br />
+                    <label><input type="radio" name="Item.PaymentMethod" value="1" checked="@(Model.Item.PaymentMethod == 1 ? "chekced" : null)" /> By bank transfer</label>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button type="submit" formaction="/Samples/ExpenseLineNew">+ Add new line</button>
+    @for (int i = 0; i < Model.Item.Lines.Count; i++)
+    {
+        var line = Model.Item.Lines[i];
+        <div class="line">
+            <input type="hidden" asp-for="Item.Lines[i].Id">
+            <input type="hidden" asp-for="Item.Lines[i].Description">
+            <input type="hidden" asp-for="Item.Lines[i].Date">
+            <input type="hidden" asp-for="Item.Lines[i].Category">
+            <input type="hidden" asp-for="Item.Lines[i].Amount">
+            <span style="float:right">
+                <button type="submit" formaction="/Samples/ExpenseLineEdit?index=@i">Edit</button>
+                <button type="submit" formaction="/Samples/ExpenseLineRemove?index=@i">&times;</button>
+            </span>
+            <strong>@line.Description</strong>
+            <br />
+            <span style="float:right">
+                <b>$ @line.Amount.Value.ToString("#,##0.00")</b>
+            </span>
+            @line.Date.Value.ToString("yyyy/MM/dd")
+            -
+            @line.Category
+        </div>
+
+    }
+    @if (Model.Item.Lines.Count > 0)
+    {
+        <div><span style="float:right">Total: $ @Model.Item.TotalAmount.ToString("#,##0.00")</span></div>
+    }
+
+    <div class="formfooter">
+        <button type="submit" formaction="/Samples/ExpenseSubmit">Submit</button>
+    </div>
+
+    <dialog id="linedialog" class="dialog-modal">
+        Loading...
+    </dialog>
+
+</form>

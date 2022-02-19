@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using SirclDocs.Website.Data.Samples;
 using SirclDocs.Website.Models.Samples;
 
@@ -436,6 +437,141 @@ namespace SirclDocs.Website.Controllers
             {
                 return RecipeModalView(model);
             }
+        }
+
+        #endregion
+
+        #region Expenses sample
+
+        [HttpGet, HttpPost]
+        public IActionResult Expense(ExpenseModel model)
+        {
+            if (model.Item == null)
+            {
+                model.Item = new();
+                //model.Item.Lines.Add(new Models.Samples.ExpenseLine() { Id = 1, Description = "First expense", Category = "Marketing", Date = DateTime.Now, Amount = 150.95m });
+                //model.Item.Lines.Add(new Models.Samples.ExpenseLine() { Id = 2, Description = "Second expense", Category = "Finance", Date = DateTime.Now, Amount = 1123.45m });
+            }
+
+            ModelState.Clear();
+            return ExpenseView(model);
+        }
+
+        [HttpPost]
+        public IActionResult ExpenseLineNew(ExpenseModel model)
+        {
+            model.CurrentLine = new ExpenseLine();
+
+            ModelState.Clear();
+            return ExpenseLineView(model);
+        }
+
+        [HttpPost]
+        public IActionResult ExpenseLineEdit(ExpenseModel model, int index)
+        {
+            model.CurrentLine = model.Item.Lines[index];
+
+            ModelState.Clear();
+            return ExpenseLineView(model);
+        }
+
+        [HttpPost]
+        public IActionResult ExpenseLineRemove(ExpenseModel model, int index)
+        {
+            model.Item.Lines.RemoveAt(index);
+
+            ModelState.Clear();
+            return ExpenseView(model);
+        }
+
+        [HttpPost]
+        public IActionResult ExpenseLine(ExpenseModel model)
+        {
+
+            ModelState.Clear();
+            return ExpenseLineView(model);
+        }
+
+        [HttpPost]
+        public IActionResult ExpenseLineSubmit(ExpenseModel model)
+        {
+            foreach (var key in ModelState.Keys.ToList())
+            { 
+                if (key !="CurrentLine" && !key.StartsWith("CurrentLine."))
+                {
+                    ModelState.Remove(key);
+                }
+            }
+
+            if (ModelState.IsValid)
+            {
+                if (model.CurrentLine.Id == 0)
+                {
+                    model.CurrentLine.Id = Environment.TickCount;
+                    model.Item.Lines.Add(model.CurrentLine);
+                }
+                else
+                {
+                    for (int i = 0; i < model.Item.Lines.Count; i++)
+                    {
+                        if (model.Item.Lines[i].Id == model.CurrentLine.Id)
+                        {
+                            model.Item.Lines[i] = model.CurrentLine;
+                            break;
+                        }
+                    }
+                }
+                ModelState.Clear();
+                return ExpenseView(model);
+            }
+            else
+            {
+                return ExpenseLineView(model);
+            }
+        }
+
+        [HttpPost]
+        public IActionResult ExpenseSubmit(ExpenseModel model, IFormCollection form)
+        {
+            if (model.Item.Lines.Count == 0)
+            {
+                ModelState.AddModelError("Item.Lines", "Expense note must contain at least one expense line.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                return Saved(form, "Expense note submitted.", true);
+            }
+            else
+            {
+                return ExpenseView(model);
+            }
+        }
+
+        private IActionResult ExpenseView(ExpenseModel model)
+        {
+            model.CurrentLine = null;
+
+            model.Managers = new List<string> { "", "Alex Vandermeersch", "Jacky Smith", "Liza Montenegro", "Peter Connor" }
+                .Select(i => new SelectListItem(i, i))
+                .ToList();
+
+            model.CostCenters = new List<string> { "", "Direction", "Finances", "Marketing", "Production" }
+                .Select(i => new SelectListItem(i, i))
+                .ToList();
+
+            return View("Expense", model);
+        }
+
+        private IActionResult ExpenseLineView(ExpenseModel model)
+        {
+            Response.Headers["X-Sircl-Target"] = "#linedialog";
+
+            model.Categories = new List<string> { "", "Hotel", "Transportation", "Material", "Meal", "Other" }
+                .Select(i => new SelectListItem(i, i))
+                .ToList();
+
+            return View("ExpenseLine", model);
         }
 
         #endregion

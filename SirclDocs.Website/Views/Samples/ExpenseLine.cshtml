@@ -1,0 +1,53 @@
+﻿@model SirclDocs.Website.Models.Samples.ExpenseModel
+@{
+    Layout = null;
+}
+
+@if (Model.CurrentLine.Id == 0)
+{
+    <h3>New line</h3>
+}
+else
+{
+    <h3>Edit line</h3>
+}
+
+<div asp-validation-summary="All">
+    <div>Please fix following errors:</div>
+</div>
+
+
+<input type="hidden" asp-for="CurrentLine.Id" />
+
+<div class="field">
+    <label>Description</label><br />
+    <input asp-for="CurrentLine.Description" />
+</div>
+
+<div class="field">
+    <label>Date</label><br />
+    <input type="date" asp-for="CurrentLine.Date" />
+</div>
+
+<div class="field">
+    <label>Cateogry:</label><br />
+    <select asp-for="CurrentLine.Category" asp-items="Model.Categories"></select>
+</div>
+
+<div class="field">
+    <label>Amount:</label><br />
+    <input asp-for="CurrentLine.Amount" style="width: 200px;" />
+</div>
+
+<div class="formfooter">
+<button type="button" class="onclick-closedialog">Cancel</button>
+
+@if (Model.CurrentLine.Id == 0)
+{
+    <button type="submit" formaction="/Samples/ExpenseLineSubmit">Add</button>
+}
+else
+{
+    <button type="submit" formaction="/Samples/ExpenseLineSubmit">Update</button>
+}
+</div>
