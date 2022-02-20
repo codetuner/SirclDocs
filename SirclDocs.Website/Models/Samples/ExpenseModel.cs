@@ -28,7 +28,7 @@ namespace SirclDocs.Website.Models.Samples
         public string CostCenter { get; set; }
 
         [Required]
-        public string Manger { get; set; }
+        public string Manager { get; set; }
 
         public int PaymentMethod { get; set; }
 
