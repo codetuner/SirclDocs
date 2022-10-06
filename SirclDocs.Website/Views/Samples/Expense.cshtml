@@ -14,7 +14,7 @@
         <tbody>
             <tr>
                 <td width="20%">Description:</td>
-                <td width="80%"><input asp-for="Item.Description" /></td>
+                <td width="80%"><input asp-for="Item.Description" required /></td>
             </tr>
             <tr>
                 <td>Cost center:</td>
@@ -38,7 +38,7 @@
         </tbody>
     </table>
 
-    <button type="submit" formaction="/Samples/ExpenseLineNew">+ Add new line</button>
+    <button type="submit" formaction="/Samples/ExpenseLineNew" formnovalidate>+ Add new line</button>
     @for (int i = 0; i < Model.Item.Lines.Count; i++)
     {
         var line = Model.Item.Lines[i];
