@@ -48,10 +48,10 @@ namespace SirclDocs.Website.Models.Samples
         public DateTime? Date { get; set; }
 
         [Required]
-        public decimal? Amount { get; set; }
+        public string Category { get; set; }
 
         [Required]
-        public string Category { get; set; }
+        public decimal? Amount { get; set; }
 
         public List<string> Names { get; set; } = new();
     }
