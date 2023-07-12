@@ -158,11 +158,15 @@ namespace SirclDocs.Website
 
                 endpoints.MapRazorPages();
 
+                #region Content
+
                 endpoints.MapControllerRoute(
                     name: "content",
                     pattern: "{**path}",
                     defaults: new { controller = "Content", action = "Render" }
                 );
+
+                #endregion
             });
         }
     }
