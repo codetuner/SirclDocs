@@ -575,5 +575,17 @@ namespace SirclDocs.Website.Controllers
         }
 
         #endregion
+
+        #region Barcode scanner sample
+
+        [HttpPost]
+        public IActionResult BarcodeScanned(string newCode, string newFormat)
+        {
+            ViewBag.NewCode = newCode;
+            ViewBag.NewFormat = newFormat;
+            return View();
+        }
+
+        #endregion
     }
 }
