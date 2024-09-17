@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
@@ -39,6 +40,13 @@ namespace SirclDocs.Website
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
+
+            #region DataProtection
+
+            services.AddDataProtection()
+                .PersistKeysToDbContext<ApplicationDbContext>();
+
+            #endregion
 
             #region Cors
 

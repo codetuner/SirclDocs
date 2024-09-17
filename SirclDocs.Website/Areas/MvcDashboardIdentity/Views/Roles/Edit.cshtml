@@ -1,6 +1,5 @@
 ﻿@model EditModel
-
-<form class="onsubmit-disable" action="@Url.Action("Save")" method="post" default-submit-button=".default" default-cancel-button=".cancel">
+<form class="onsubmit-disable" action="@Url.Action("Save")" method="post" onkeyenter-click=".default" onkeyescape-click=".cancel">
     <div class="modal-header">
         <h5 class="modal-title">Role</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -20,10 +19,10 @@
 
     </div>
     <div class="modal-footer justify-content-start">
-        <button type="submit" class="btn btn-primary default"><i class="spinner fas fa-save"></i> Save changes</button>
+        <button type="submit" class="btn btn-primary default"><i class="spinner fas fa-solid fa-save"></i> @(Model.IsNew ? "Create" : "Update")</button>
         @if (Model.Item?.Name != null)
         {
-            <a class="btn btn-danger" disabled="@(Model.Item == null ? "disabled" : null)" href="@Url.Action("DeleteRequest", new { id = Model.Item?.Id })"><i class="spinner fas fa-trash-alt"></i> Delete</a>
+            <a class="btn btn-danger" @*disabled="@(Model.Item == null ? "disabled" : null)"*@ href="@Url.Action("DeleteRequest", new { id = Model.Item?.Id })" target="<.target"><i class="spinner fas fa-solid fa-trash-alt"></i> Delete</a>
         }
         <button type="button" class="btn btn-link cancel ml-auto" data-bs-dismiss="modal">Close</button>
     </div>

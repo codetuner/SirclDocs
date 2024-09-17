@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Models
 {
     public class BaseEditModel<TItem>
+        where TItem : class
     {
-        public TItem Item { get; set; }
+        public TItem Item { get; set; } = null!;
 
         public bool HasChanges { get; set; }
     }

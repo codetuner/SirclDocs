@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
 {
@@ -34,7 +32,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
             MethodCallExpression orderByCall = Expression.Call(typeof(Queryable), orderByMethod, new Type[] { query.ElementType, me.Type }, query.Expression
                 , Expression.Quote(Expression.Lambda(me, pe)));
 
-            return query.Provider.CreateQuery(orderByCall) as IQueryable<T>;
+            return (IQueryable<T>)query.Provider.CreateQuery(orderByCall);
         }
     }
 }

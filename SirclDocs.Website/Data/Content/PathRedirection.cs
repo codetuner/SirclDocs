@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+#nullable enable
+
 namespace SirclDocs.Website.Data.Content
 {
     /// <summary>
@@ -12,7 +14,7 @@ namespace SirclDocs.Website.Data.Content
         /// <summary>
         /// Identifier of the path redirection.
         /// </summary>
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public virtual int Id { get; set; }
 
         /// <summary>
@@ -26,7 +28,7 @@ namespace SirclDocs.Website.Data.Content
         /// </summary>
         [MaxLength(2000)]
         [Required]
-        public virtual string FromPath { get; set; }
+        public virtual required string FromPath { get; set; }
 
         /// <summary>
         /// The path to redirect to.
@@ -34,7 +36,7 @@ namespace SirclDocs.Website.Data.Content
         /// </summary>
         [MaxLength(2000)]
         [Required]
-        public virtual string ToPath { get; set; }
+        public virtual required string ToPath { get; set; }
 
         /// <summary>
         /// The HTTP status code to return for the redirection response.
@@ -50,6 +52,6 @@ namespace SirclDocs.Website.Data.Content
         /// <summary>
         /// Internal notes.
         /// </summary>
-        public virtual string Notes { get; set; }
+        public virtual string? Notes { get; set; }
     }
 }

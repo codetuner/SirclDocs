@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Data.Content
 {
@@ -16,20 +16,20 @@ namespace SirclDocs.Website.Data.Content
         /// <summary>
         /// Identifier of the document type.
         /// </summary>
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public virtual int Id { get; set; }
 
         /// <summary>
         /// Name of the document type.
         /// </summary>
         [Required, MaxLength(200)]
-        public virtual string Name { get; set; }
+        public virtual required string Name { get; set; }
 
         /// <summary>
         /// (Razor) view to use to render documents of this type.
         /// </summary>
         [MaxLength(200)]
-        public virtual string ViewName { get; set; }
+        public virtual string? ViewName { get; set; }
 
         /// <summary>
         /// Base document type of which this document type inherits property types.
@@ -39,7 +39,7 @@ namespace SirclDocs.Website.Data.Content
         /// <summary>
         /// Base document type of which this document type inherits property types.
         /// </summary>
-        public virtual DocumentType Base { get; set; }
+        public virtual DocumentType? Base { get; set; }
 
         /// <summary>
         /// Whether documents can be instantiated from this document type.
@@ -50,7 +50,7 @@ namespace SirclDocs.Website.Data.Content
         /// Property types of this document type excluding the inheritted property types.
         /// </summary>
         [InverseProperty(nameof(PropertyType.DocumentType))]
-        public virtual List<PropertyType> OwnPropertyTypes { get; set; } = new List<PropertyType>();
+        public virtual List<PropertyType>? OwnPropertyTypes { get; set; }
 
         /// <summary>
         /// Returns property types inheritted by base document type.
@@ -77,8 +77,8 @@ namespace SirclDocs.Website.Data.Content
             // Collect all inherited properties:
             var allPropertyTypes = this.GetInheritedPropertyTypes(context).ToList();
             // Then add owned properties one by one:
-            context.Entry(this).Collection(dt => dt.OwnPropertyTypes).Load();
-            foreach (var item in this.OwnPropertyTypes.OrderBy(pt => pt.DisplayOrder).ThenBy(pt => pt.Name))
+            context.Entry(this).Collection(dt => dt.OwnPropertyTypes!).Load();
+            foreach (var item in this.OwnPropertyTypes!.OrderBy(pt => pt.DisplayOrder).ThenBy(pt => pt.Name))
             {
                 // Remove overriden properties:
                 allPropertyTypes.RemoveAll(pt => pt.Name == item.Name);

@@ -5,19 +5,17 @@
 @{
     Layout = "_Layout";
     ViewData["Title"] = Html.Content("Title");
+    var IsPreview = (bool)(ViewBag.IsPreview ?? false);
     //IgnoreBody();
     var hasToc = Boolean.Parse(Model.Document["HasToc"].Value ?? "False");
-    var section = Model.Parents.Where(p => p.Type.Name == "SectionPage").FirstOrDefault();
-    var neighbours = new Document[0];
-    var previous = default(Document);
-    var next = default(Document);
+    var section = Model.Document.GetParents(context).Where(p => p.DocumentTypeName == "SectionPage").FirstOrDefault();
+    var neighbours = new PublishedDocument[0];
+    var previous = default(PublishedDocument);
+    var next = default(PublishedDocument);
     if (section != null)
     {
-        neighbours = context.ContentDocuments
-            .Include(n => n.Properties)
-            .Where(n => n.Path.StartsWith(section.Path) && n.PathSegmentsCount == section.PathSegmentsCount + 1)
-            .Where(n => n.PublishedOnUtc != null && n.PublishedOnUtc < DateTime.UtcNow && n.DeletedOnUtc == null)
-            .Where(n => n.Type.Name == "Page" || n.Type.Name == "SectionPage")
+        neighbours = Model.Document.GetSiblings(context)
+            .Where(s => s.DocumentTypeName == "Page" || s.DocumentTypeName == "SectionPage")
             .OrderBy(n => n.SortKey)
             .ToArray();
         var currentIndex = Array.IndexOf(neighbours, Model.Document);
@@ -26,16 +24,20 @@
     }
 }
 
-@if (this.Context.User?.IsInRole("Administrator") == true || this.Context.User?.IsInRole("ContentAdministrator") == true || this.Context.User?.IsInRole("ContentEditor") == true)
+@if (this.Context.User?.IsInRole("Administrator") == true || this.Context.User?.IsInRole("ContentAdministrator") == true || this.Context.User?.IsInRole("ContentEditor") == true || this.Context.User?.IsInRole("ContentAuthor") == true)
 {
-    <div class="float-right float-end"><a asp-action="Edit" asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.Id" class="btn btn-light btn-sm">EDIT</a></div>
+    if (IsPreview)
+    {
+        <div style="float: right; margin: 4px 8px;"><a href="javascript:window.close();" style="background-color: #0d6efe; border: solid 1px #c8c8cf; border-radius: 4px; padding: 6px 8px; color: #fff; font-size: 0.9rem; text-decoration: none;">Close this preview</a></div>
+    }
+    else
+    {
+        <div style="float: right; margin: 4px 8px;"><a asp-action="Edit" asp-controller="Document" asp-route-area="MvcDashboardContent" asp-route-id="@Model.Document.DocumentId" style="background-color: #f0f0f4; border: solid 1px #c8c8cf; border-radius: 4px; padding: 4px 8px; color: #000; font-size: .8rem; text-decoration: none;">Edit</a></div>
+    }
 }
 
-
 <div class="container-xxl">
-
-
-    <main role="main" class="pb-3 @(Model.Document.Type.Name.ToLower())">
+    <main role="main" class="pb-3 @(Model.Document.DocumentTypeName.ToLower())">
 
         @if (section != null && hasToc)
         {
@@ -172,11 +174,11 @@
             </div>
         }
 
-        @if (Model.Document.Type.Name == "SectionPage")
+        @if (Model.Document.DocumentTypeName == "SectionPage")
         {
             <div class="row">
                 <div class="col-12 section-index">
-                    @foreach (var child in Model.Children)
+                    @foreach (var child in Model.Document.GetChildren(context))
                     {
                         <div>
                             <h2><a href="@(child.Path)">@(child["Title"].Value)</a></h2>

@@ -1,26 +1,28 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Configuration;
 using SirclDocs.Website.Areas.MvcDashboardLogging.Models.Items;
-using SirclDocs.Website.Data;
 using SirclDocs.Website.Data.Logging;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
 {
-    [Authorize(Roles = "Administrator,LoggingAdministrator")]
     public class ItemsController : BaseController
     {
         #region Construction
 
         private readonly LoggingDbContext context;
 
-        public ItemsController(LoggingDbContext context)
+        private readonly IConfiguration configuration;
+
+        public ItemsController(LoggingDbContext context, IConfiguration configuration)
         {
             this.context = context;
+            this.configuration = configuration;
         }
 
         #endregion
@@ -31,9 +33,18 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
         public IActionResult Index(IndexModel model)
         {
             // Retrieve data:
-            var query = context.RequestLogs.AsQueryable();
+            var query = context.RequestLogs
+                .AsQueryable()
+                .Where(d => model.ApplicationFilter == null || d.ApplicationName == model.ApplicationFilter)
+                .Where(d => model.AspectFilter == null || d.AspectName == model.AspectFilter)
+                .Where(d => model.BookmarkedFilter == false || d.IsBookmarked == true);
             if (!String.IsNullOrWhiteSpace(model.Query))
-                query = query.Where(d => d.Message.Contains(model.Query) || d.Url.Contains(model.Query) || d.User.Contains(model.Query) || d.Details.Contains(model.Query));
+                query = query
+                    .Where(d => d.TraceIdentifier == model.Query
+                        || d.Message!.Contains(model.Query)
+                        || d.Url!.Contains(model.Query)
+                        || d.User!.Contains(model.Query)
+                        || d.Details!.Contains(model.Query));
 
             // Build model:
             var count = query
@@ -49,6 +60,16 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
             return View("Index", model);
         }
 
+        [OutputCache(Duration = 300)]
+        public IActionResult ApplicationNameOptions(string? selected)
+        {
+            var model = new ApplicationNameOptionsModel();
+            model.Options = context.RequestLogs.Where(l => l.ApplicationName != null).Select(l => l.ApplicationName).Distinct().ToList();
+            model.SelectedOption = selected;
+
+            return View(model);
+        }
+
         #endregion
 
         #region Edit
@@ -56,10 +77,16 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
         [HttpGet]
         public IActionResult Edit(int id)
         {
-            var model = new EditModel();
-            model.Item = context.RequestLogs.Find(id);
-            if (model.Item == null) return new NotFoundResult();
-            return EditView(model);
+            var item = context.RequestLogs.Find(id);
+            if (item == null)
+            {
+                return new NotFoundResult();
+            }
+            else
+            {
+                var model = new EditModel { Item = item };
+                return EditView(model);
+            }
         }
 
         private IActionResult EditView(EditModel model)
@@ -74,17 +101,73 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
         public IActionResult AddBookmark(int id)
         {
             var log = context.RequestLogs.Find(id);
-            log.IsBookmarked = true;
-            context.SaveChanges();
+            if (log != null)
+            {
+                log.IsBookmarked = true;
+                context.SaveChanges();
+            }
             return PartialView("Bookmark", log);
         }
 
         public IActionResult RemoveBookmark(int id)
         {
             var log = context.RequestLogs.Find(id);
-            log.IsBookmarked = false;
-            context.SaveChanges();
+            if (log != null)
+            {
+                log.IsBookmarked = false;
+                context.SaveChanges();
+            }
             return PartialView("Bookmark", log);
+        }
+
+        #endregion
+
+        #region Logging rules
+
+        public IActionResult CreateIgnoreRule(int id)
+        {
+            var log = context.RequestLogs.Find(id);
+            if (log != null)
+            {
+                var matchingRules = context.LogActionRules
+                    .Where(r => r.Action == Logging.LogAction.DoNotLog && r.Url == log.Url && r.StatusCode == log.StatusCode && r.AspectName == log.AspectName && r.Method == log.Method && r.Type == log.Type)
+                    .ToList();
+
+                if (matchingRules.Any(r => r.IsActive == true))
+                {
+                    this.SetToastrMessage("info", "There is already a matching rule. The server may need to be restarted for the rule to be applied.");
+                }
+                else if (matchingRules.Any(r => r.IsActive == false))
+                {
+                    foreach(var rule in matchingRules)
+                    {
+                        rule.IsActive = true;
+                    }
+                    this.SetToastrMessage("success", "A rule existed and has now been activated.");
+                }
+                else
+                {
+                    context.Add(new LogActionRule()
+                    {
+                        Action = Logging.LogAction.DoNotLog,
+                        Method = log.Method,
+                        StatusCode = log.StatusCode,
+                        AspectName = log.AspectName,
+                        Type = log.Type,
+                        Url = log.Url,
+                        IsActive = true
+                    });
+                    this.SetToastrMessage("success", "A rule has been created to ignore similar logs in the future.");
+                }
+
+                context.SaveChanges();
+            }
+            else
+            {
+                this.SetToastrMessage("error", "Failed to create rule: missing template log.");
+            }
+
+            return NoContent();
         }
 
         #endregion

@@ -1,11 +1,7 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security;
-using System.Threading.Tasks;
 
 namespace SirclDocs.Website.Logging
 {
@@ -19,15 +15,12 @@ namespace SirclDocs.Website.Logging
 
         public override void PostInvoke(HttpContext context, RequestLogger requestLogger)
         {
-            // Try and retrieve the error from the ExceptionHandler middleware
-            var exceptionDetails = context.Features.Get<IExceptionHandlerFeature>();
-            var ex = exceptionDetails?.Error;
-
+            var ex = requestLogger.Exception;
             if (ex != null)
             {
                 if (requestLogger.StoreLog == null) requestLogger.StoreLog = true;
                 var aspect = (ex is SecurityException) ? LogAspect.Security : LogAspect.Error;
-                requestLogger.SetMessage(aspect.Name, true, ex.Message);
+                requestLogger.SetException(aspect.Name, true, ex);
                 requestLogger.WriteLine(ex.ToString());
                 WriteExceptionData(requestLogger, "Ex", ex);
             }
@@ -41,7 +34,7 @@ namespace SirclDocs.Website.Logging
                 {
                     try
                     {
-                        logger.WithData(path + "." + Convert.ToString(entry.Key), Convert.ToString(entry.Value));
+                        logger.WithData(path + "." + Convert.ToString(entry.Key), Convert.ToString(entry.Value) ?? String.Empty);
                     }
                     catch (Exception) { }
                 }

@@ -1,14 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SirclDocs.Website.Areas.MvcDashboardContent.Models.DocumentType;
-using SirclDocs.Website.Data;
 using SirclDocs.Website.Data.Content;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
 {
@@ -53,8 +51,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         [HttpGet]
         public IActionResult New()
         {
-            var model = new EditModel();
-            model.Item = new Data.Content.DocumentType();
+            var model = new EditModel() { Item = new DocumentType() { Name = null!, IsInstantiable = true } };
             return EditView(model);
         }
 
@@ -66,12 +63,12 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
             model.Item = context.ContentDocumentTypes
                 .Include(dt => dt.OwnPropertyTypes)
                 //.ThenInclude(pt => pt.DataType)
-                .SingleOrDefault(dt => dt.Id == id);
-            if (model.Item == null) return new NotFoundResult();
+                .SingleOrDefault(dt => dt.Id == id)
+                ?? throw new BadHttpRequestException("Object not found.", 404);
 
             // Ensure property type display orders are in sequence:
             var nextDisplayOrder = 0;
-            foreach (var property in model.Item.OwnPropertyTypes.OrderBy(pt => pt.DisplayOrder).ThenBy(pt => pt.Name))
+            foreach (var property in model.Item.OwnPropertyTypes!.OrderBy(pt => pt.DisplayOrder).ThenBy(pt => pt.Name))
             {
                 property.DisplayOrder = nextDisplayOrder++;
             }
@@ -83,11 +80,13 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         [HttpPost]
         public IActionResult AddPropertyType(int id, EditModel model)
         {
+            ModelStateBindPropertySettings(model);
             ModelState.Clear();
             model.HasChanges = true;
 
+            model.Item.OwnPropertyTypes ??= new List<PropertyType>();
             var nextDisplayOrder = model.Item.OwnPropertyTypes.Select(pt => pt.DisplayOrder).DefaultIfEmpty(-1).Max() + 1;
-            model.Item.OwnPropertyTypes.Add(new Data.Content.PropertyType() { DisplayOrder = nextDisplayOrder });
+            model.Item.OwnPropertyTypes.Add(new Data.Content.PropertyType() { DisplayOrder = nextDisplayOrder, Name = null!, DocumentType = null!, DataType = null! });
 
             return EditView(model);
         }
@@ -95,10 +94,11 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         [HttpPost]
         public IActionResult MovePropertyTypeUp(int id, EditModel model, int index)
         {
+            ModelStateBindPropertySettings(model);
             ModelState.Clear();
             model.HasChanges = true;
 
-            var displayOrder = model.Item.OwnPropertyTypes[index].DisplayOrder;
+            var displayOrder = model.Item.OwnPropertyTypes![index].DisplayOrder;
             foreach (var property in model.Item.OwnPropertyTypes)
             {
                 if (property.DisplayOrder == (displayOrder - 1)) property.DisplayOrder++;
@@ -111,10 +111,11 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         [HttpPost]
         public IActionResult MovePropertyTypeDown(int id, EditModel model, int index)
         {
+            ModelStateBindPropertySettings(model);
             ModelState.Clear();
             model.HasChanges = true;
 
-            var displayOrder = model.Item.OwnPropertyTypes[index].DisplayOrder;
+            var displayOrder = model.Item.OwnPropertyTypes![index].DisplayOrder;
             foreach (var property in model.Item.OwnPropertyTypes)
             {
                 if (property.DisplayOrder == (displayOrder + 1)) property.DisplayOrder--;
@@ -127,10 +128,11 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         [HttpPost]
         public IActionResult DeletePropertyType(int id, EditModel model, int index)
         {
+            ModelStateBindPropertySettings(model);
             ModelState.Clear();
             model.HasChanges = true;
 
-            var displayOrder = model.Item.OwnPropertyTypes[index].DisplayOrder;
+            var displayOrder = model.Item.OwnPropertyTypes![index].DisplayOrder;
             foreach (var property in model.Item.OwnPropertyTypes)
             {
                 if (property.DisplayOrder > displayOrder) property.DisplayOrder--;
@@ -148,6 +150,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         [HttpPost]
         public IActionResult Save(int id, EditModel model)
         {
+            ModelStateBindPropertySettings(model);
             if (ModelState.IsValid)
             {
                 try
@@ -158,7 +161,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
                     // Delete removed property types:
                     foreach (var ptid in model.PropertyTypesToDelete)
                     {
-                        context.Attach(new Data.Content.PropertyType() { Id = ptid }).State = EntityState.Deleted;
+                        context.Attach(new Data.Content.PropertyType() { Id = ptid, Name = null!, DataType = null!, DocumentType = null! }).State = EntityState.Deleted;
                         foreach (var propertyToDelete in context.ContentProperties.Where(p => p.TypeId == ptid))
                         {
                             context.Remove(propertyToDelete);
@@ -184,10 +187,11 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         [HttpPost]
         public IActionResult Delete(int id, EditModel model)
         {
+            ModelStateBindPropertySettings(model);
             try
             {
                 var item = context.ContentDocumentTypes.Find(id);
-                context.Remove(item);
+                if (item != null) context.Remove(item);
                 context.SaveChanges();
                 return Back(false);
             }
@@ -203,6 +207,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         private IActionResult EditView(EditModel model)
         {
             // Order owned properties according to DisplayOrder:
+            model.Item.OwnPropertyTypes ??= new List<PropertyType>();
             model.Item.OwnPropertyTypes = model.Item.OwnPropertyTypes.OrderBy(pt => pt.DisplayOrder).ToList();
 
             // Retrieve reference data:
@@ -212,6 +217,15 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
 
             // Return view:
             return View("Edit", model);
+        }
+
+        private void ModelStateBindPropertySettings(EditModel model)
+        {
+            foreach(var pair in Request.Form.Where(p => p.Key.StartsWith("OwnPropertyTypesSettingsAsString[")))
+            {
+                var index = Int32.Parse(pair.Key[33..^1]);
+                model.OwnPropertyTypesSettingsAsString[index] = pair.Value.ToString();
+            }
         }
 
         #endregion

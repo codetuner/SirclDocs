@@ -7,7 +7,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Models
 {
     public class BaseEditModel<TItem>
     {
-        public TItem Item { get; set; }
+        public TItem Item { get; set; } = default!;
 
         public bool HasChanges { get; set; }
     }

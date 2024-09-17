@@ -2,25 +2,27 @@
 using Microsoft.Extensions.Configuration;
 using SirclDocs.Website.Data.Logging;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Logging
 {
     public class RequestLogger
     {
         private RequestLog record = new();
-        private Stopwatch stopwatch;
+        private Stopwatch? stopwatch;
         private StringBuilder detailsBuilder = new();
         private bool doNotLog = false;
+        private readonly string? applicationName;
 
         public RequestLogger(IConfiguration configuration, LoggingDbContext context)
         {
             this.Context = context;
             this.Configuration = configuration;
+            this.applicationName = Configuration.GetValue<string?>("LoggingApplicationName", Configuration.GetValue<string>("ApplicationName"));
         }
 
         public LoggingDbContext Context { get; private set; }
@@ -29,7 +31,9 @@ namespace SirclDocs.Website.Logging
 
         public bool? StoreLog { get; set; }
 
-        public long DurationMs => this.stopwatch.ElapsedMilliseconds;
+        public long DurationMs => this.stopwatch?.ElapsedMilliseconds ?? 0L;
+
+        public Exception? Exception { get; set; }
 
         public void RequestStarted()
         {
@@ -45,25 +49,26 @@ namespace SirclDocs.Website.Logging
 
                 // Add information:
                 this.record.Details = this.detailsBuilder.ToString();
-                this.record.DurationMs = this.stopwatch.ElapsedMilliseconds;
+                this.record.DurationMs = this.stopwatch?.ElapsedMilliseconds ?? 0L;
                 this.record.Host = Environment.MachineName;
                 this.record.TraceIdentifier = httpContext.TraceIdentifier;
 
                 // Add request information:
+                this.record.ApplicationName = GetApplicationName();
                 this.record.Method = httpContext.Request.Method;
-                this.record.Url = httpContext.Request.Path;
+                this.record.Url = TrimLength(httpContext.Request.Path.ToString(), 2000);
                 this.record.User = httpContext.User?.Identity?.Name;
-                this.record.Request["QueryString"] = httpContext.Request.QueryString.Value;
+                this.record.Request["QueryString"] = httpContext.Request.QueryString.Value ?? String.Empty;
                 this.record.Request["Scheme"] = httpContext.Request.Scheme;
                 foreach (var pair in httpContext.Request.Headers)
                 {
-                    this.record.Request["Header: " + pair.Key] = pair.Value;
+                    this.record.Request["Header: " + pair.Key] = pair.Value!;
                 }
                 if (httpContext.Request.HasFormContentType)
                 {
                     foreach (var pair in httpContext.Request.Form)
                     {
-                        this.record.Request["Form: " + pair.Key] = pair.Value;
+                        this.record.Request["Form: " + pair.Key] = pair.Value!;
                     }
                 }
 
@@ -76,17 +81,40 @@ namespace SirclDocs.Website.Logging
             }
         }
 
+        [return: NotNullIfNotNull(nameof(str))]
+        private static string? TrimLength(string? str, int len)
+        {
+            if (str == null) return null;
+            return (str.Length <= len) ? str : str[..len];
+        }
+
         public void DoNotLog()
         {
             this.doNotLog = true;
         }
 
-        public string GetAspectName()
+        public string? GetAspectName()
         {
             return this.record.AspectName;
         }
 
-        public RequestLogger SetMessage(string aspectName, bool @override, string message)
+        public new string? GetType()
+        {
+            return this.record.Type;
+        }
+
+        public RequestLogger SetException(string aspectName, bool @override, Exception ex)
+        {
+            if ((doNotLog == false) && (this.record.AspectName == null || @override == true))
+            {
+                this.record.Type = ex.GetType().FullName;
+                this.record.Message = ex.Message;
+                this.record.AspectName = aspectName;
+            }
+            return this;
+        }
+
+        public RequestLogger SetMessage(string aspectName, bool @override, string? message)
         {
             if ((doNotLog == false) && (this.record.AspectName == null || @override == true))
             {
@@ -114,8 +142,16 @@ namespace SirclDocs.Website.Logging
 
         public RequestLogger WithData(string key, string value)
         {
-            if (!doNotLog) this.record.Data[key] = value;
+            if (!doNotLog)
+            {
+                this.record.Data[key] = value;
+            }
             return this;
+        }
+
+        public string? GetApplicationName()
+        {
+            return this.applicationName;
         }
     }
 }

@@ -1,23 +1,20 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient.DataClassification;
 using Microsoft.EntityFrameworkCore;
 using SirclDocs.Website.Areas.MvcDashboardLogging.Models.Home;
-using SirclDocs.Website.Data;
 using SirclDocs.Website.Data.Logging;
 using SirclDocs.Website.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
 {
-    [Authorize(Roles = "Administrator,LoggingAdministrator")]
     public class HomeController : BaseController
     {
+        private static bool migrationsComplete = false;
+
         #region Construction
 
         private readonly LoggingDbContext context;
@@ -30,15 +27,40 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
         #endregion
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var model = new IndexModel();
+
+            // Check if there are pending migrations:
+            if (!migrationsComplete)
+            {
+                var migrations = await context.Database.GetPendingMigrationsAsync();
+                if (migrations != null && migrations.Any())
+                {
+                    model.HasPendingMigrations = true;
+                }
+                else
+                {
+                    // Skip checking next time:
+                    migrationsComplete = true;
+                }
+            }
+
+            return View(model);
         }
 
         [HttpGet]
         public IActionResult GetStarted()
         {
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult RunMigrations()
+        {
+            context.Database.Migrate();
+
+            return Forward(Url.Action("Index")!);
         }
 
         public IActionResult Chart(string grain)
@@ -52,7 +74,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
             {
                 var start = now.AddHours(-47);
                 for (int i = -47; i <= 0; i++)
-                { 
+                {
                     var then = now.AddHours(i);
                     labels.Add(new Tuple<int, string>(then.Day * 100 + then.Hour, then.AddMinutes(-timeZoneOffset).ToString("HH") + "-" + then.AddMinutes(-timeZoneOffset).AddHours(1).ToString("HH")));
                 }
@@ -80,14 +102,16 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
                 l.Count(ll => ll.AspectName == LogAspect.Attention.Name),
                 l.Count(ll => ll.AspectName == LogAspect.NotFound.Name),
                 l.Count(ll => ll.AspectName == LogAspect.Timing.Name),
+                l.Count(ll => ll.AspectName == LogAspect.Information.Name),
             }).ToArray();
 
-            var dataSets = new ChartDataSet[5];
+            var dataSets = new ChartDataSet[6];
             dataSets[0] = new ChartDataSet(LogAspect.Error, new int[labels.Count]);
             dataSets[1] = new ChartDataSet(LogAspect.Security, new int[labels.Count]);
             dataSets[2] = new ChartDataSet(LogAspect.Attention, new int[labels.Count]);
             dataSets[3] = new ChartDataSet(LogAspect.NotFound, new int[labels.Count]);
             dataSets[4] = new ChartDataSet(LogAspect.Timing, new int[labels.Count]);
+            dataSets[5] = new ChartDataSet(LogAspect.Information, new int[labels.Count]);
 
             for (int i = 0; i < labels.Count; i++)
             {
@@ -96,6 +120,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
                 dataSets[2].Data[i] = data.SingleOrDefault(d => d[0] == labels[i].Item1)?[3] ?? 0;
                 dataSets[3].Data[i] = data.SingleOrDefault(d => d[0] == labels[i].Item1)?[4] ?? 0;
                 dataSets[4].Data[i] = data.SingleOrDefault(d => d[0] == labels[i].Item1)?[5] ?? 0;
+                dataSets[5].Data[i] = data.SingleOrDefault(d => d[0] == labels[i].Item1)?[6] ?? 0;
             }
 
             return View(new ChartModel(grain, labels.Select(l => l.Item2).ToArray(), dataSets));
@@ -129,7 +154,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
             }
 
             // Return view:
-            return View("Index");
+            return Forward(Url.Action("Index")!);
         }
     }
 }

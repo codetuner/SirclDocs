@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SirclDocs.Website.Areas.MvcDashboardContent.Models.SecuredPath;
-using SirclDocs.Website.Data;
 using SirclDocs.Website.Data.Content;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
 {
@@ -30,11 +28,11 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         public IActionResult Index(IndexModel model)
         {
             var count = context.ContentSecuredPaths
-                .Where(i => i.Path.Contains(model.Query ?? "") || i.Roles.Contains(model.Query ?? ""))
+                .Where(i => i.Path.Contains(model.Query ?? "") || i.Roles!.Contains(model.Query ?? ""))
                 .Count();
             model.MaxPage = (count + model.PageSize - 1) / model.PageSize;
             model.Items = context.ContentSecuredPaths
-                .Where(i => i.Path.Contains(model.Query ?? "") || i.Roles.Contains(model.Query ?? ""))
+                .Where(i => i.Path.Contains(model.Query ?? "") || i.Roles!.Contains(model.Query ?? ""))
                 .OrderBy(model.Order ?? "Path ASC")
                 .Skip((model.Page - 1) * model.PageSize)
                 .Take(model.PageSize)
@@ -51,7 +49,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         public IActionResult New()
         {
             var model = new EditModel();
-            model.Item = new Data.Content.SecuredPath();
+            model.Item = Activator.CreateInstance<Data.Content.SecuredPath>();
             return EditView(model);
         }
 
@@ -59,8 +57,8 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         public IActionResult Edit(int id)
         {
             var model = new EditModel();
-            model.Item = context.ContentSecuredPaths.Find(id);
-            if (model.Item == null) return new NotFoundResult();
+            model.Item = context.ContentSecuredPaths.Find(id)
+                ?? throw new BadHttpRequestException("Object not found.", 404);
             return EditView(model);
         }
 
@@ -87,7 +85,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
                 }
             }
 
-            Response.Headers.Add("X-Sircl-History-Replace", Url.Action("Edit", new { id = model.Item.Id }));
+            Response.Headers["X-Sircl-History-Replace"] = Url.Action("Edit", new { id = model.Item.Id });
             return EditView(model);
         }
 
@@ -96,7 +94,8 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         {
             try
             {
-                var item = context.ContentSecuredPaths.Find(id);
+                var item = context.ContentSecuredPaths.Find(id)
+                    ?? throw new BadHttpRequestException("Object not found.", 404);
                 context.Remove(item);
                 context.SaveChanges();
                 return Back(false);
@@ -112,7 +111,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
 
         private IActionResult EditView(EditModel model)
         {
-            model.PathsList = context.ContentDocuments.Select(d => d.Path).Distinct().OrderBy(p => p).ToList();
+            model.PathsList = context.ContentDocuments.Where(d => d.Path != null).Select(d => d.Path!).Distinct().OrderBy(p => p).ToList();
             return View("Edit", model);
         }
 

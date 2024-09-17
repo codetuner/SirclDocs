@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SirclDocs.Website.Areas.MvcDashboardContent.Models.DataType;
-using SirclDocs.Website.Data;
 using SirclDocs.Website.Data.Content;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
 {
@@ -34,11 +32,11 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
                 .Count();
             model.MaxPage = (count + model.PageSize - 1) / model.PageSize;
             model.Items = context.ContentDataTypes
-                .Where(i => i.Name.Contains(model.Query ?? ""))
-                .OrderBy(model.Order ?? "Name ASC")
-                .Skip((model.Page - 1) * model.PageSize)
-                .Take(model.PageSize)
-                .ToArray();
+                //.Where(i => i.Name.Contains(model.Query ?? ""))
+                //.OrderBy(model.Order ?? "Name ASC")
+                //.Skip((model.Page - 1) * model.PageSize)
+                //.Take(model.PageSize)
+                .ToList().ToArray();
 
             return View("Index", model);
         }
@@ -51,7 +49,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         public IActionResult New()
         {
             var model = new EditModel();
-            model.Item = new Data.Content.DataType();
+            model.Item = Activator.CreateInstance<Data.Content.DataType>();
             return EditView(model);
         }
 
@@ -59,8 +57,8 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         public IActionResult Edit(int id)
         {
             var model = new EditModel();
-            model.Item = context.ContentDataTypes.Find(id);
-            if (model.Item == null) return new NotFoundResult();
+            model.Item = context.ContentDataTypes.Find(id)
+                ?? throw new BadHttpRequestException("Object not found.", 404);
             return EditView(model);
         }
 
@@ -87,7 +85,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
                 }
             }
 
-            Response.Headers.Add("X-Sircl-History-Replace", Url.Action("Edit", new { id = model.Item.Id }));
+            Response.Headers["X-Sircl-History-Replace"] = Url.Action("Edit", new { id = model.Item.Id });
             return EditView(model);
         }
 
@@ -97,7 +95,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
             try
             {
                 var item = context.ContentDataTypes.Find(id);
-                context.Remove(item);
+                if (item != null) context.Remove(item);
                 context.SaveChanges();
                 return Back(false);
             }

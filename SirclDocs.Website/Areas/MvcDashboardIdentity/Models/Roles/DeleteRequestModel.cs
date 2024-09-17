@@ -8,6 +8,16 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Models.Roles
 {
     public class DeleteRequestModel
     {
+        public DeleteRequestModel()
+        {
+            this.Item = new IdentityRole();
+        }
+
+        public DeleteRequestModel(IdentityRole item)
+        {
+            Item = item;
+        }
+
         public IdentityRole Item { get; set; }
     }
 }

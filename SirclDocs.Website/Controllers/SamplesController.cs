@@ -429,8 +429,8 @@ namespace SirclDocs.Website.Controllers
 
                 model.Id = Environment.TickCount;
 
-                Response.Headers.Add("X-Sircl-Target", "#recipe-list");
-                Response.Headers.Add("X-Sircl-Target-Method", "append");
+                Response.Headers["X-Sircl-Target"] = "#recipe-list";
+                Response.Headers["X-Sircl-Target-Method"] = "append";
                 return View("Recipe", model);
             }
             else

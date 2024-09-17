@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Data.Logging
 {
@@ -17,18 +17,18 @@ namespace SirclDocs.Website.Data.Logging
         /// <summary>
         /// Id of the log.
         /// </summary>
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public virtual int Id { get; set; }
 
         /// <summary>
-        /// DateTime the request was initiated.
+        /// UTC dateTime the request was initiated.
         /// </summary>
         public virtual DateTime Timestamp { get; set; }
 
         /// <summary>
         /// Trace identifier.
         /// </summary>
-        public virtual string TraceIdentifier { get; set; }
+        public virtual string? TraceIdentifier { get; set; }
 
         /// <summary>
         /// Duration of the request in milliseconds.
@@ -36,19 +36,25 @@ namespace SirclDocs.Website.Data.Logging
         public virtual long DurationMs { get; set; }
 
         /// <summary>
+        /// Name of the application following the "ApplicationName" or "LoggingApplicationName" setting.
+        /// </summary>
+        [MaxLength(200)]
+        public virtual string? ApplicationName { get; set; }
+
+        /// <summary>
         /// Name of the log aspect.
         /// </summary>
-        public virtual string AspectName { get; set; }
+        public virtual string? AspectName { get; set; }
 
         /// <summary>
         /// [NotMapped] Log aspect.
         /// </summary>
         [NotMapped]
-        public LogAspect Aspect
+        public LogAspect? Aspect
         {
             get
             { 
-                return LogAspect.ByName(this.AspectName);
+                return (this.AspectName != null) ? LogAspect.ByName(this.AspectName) : null;
             }
             set
             {
@@ -60,31 +66,31 @@ namespace SirclDocs.Website.Data.Logging
         /// Type information of the log. I.e. exception type.
         /// </summary>
         [MaxLength(2000)]
-        public virtual string Type { get; set; }
+        public virtual string? Type { get; set; }
 
         /// <summary>
         /// Host on which the log event was created.
         /// </summary>
         [Required, MaxLength(2000)]
-        public virtual string Host { get; set; }
+        public virtual string? Host { get; set; }
 
         /// <summary>
         /// Short message about the log.
         /// </summary>
         [MaxLength(2000)]
-        public virtual string Message { get; set; }
+        public virtual string? Message { get; set; }
 
         /// <summary>
         /// HTTP request method.
         /// </summary>
         [Required, MaxLength(20)]
-        public virtual string Method { get; set; }
+        public virtual string? Method { get; set; }
 
         /// <summary>
         /// URL of the logged request.
         /// </summary>
         [Required, MaxLength(2000)]
-        public virtual string Url { get; set; }
+        public virtual string? Url { get; set; }
 
         /// <summary>
         /// HTTP status code of the request response.
@@ -95,12 +101,12 @@ namespace SirclDocs.Website.Data.Logging
         /// User issuing the request.
         /// </summary>
         [MaxLength(2000)]
-        public virtual string User { get; set; }
+        public virtual string? User { get; set; }
 
         /// <summary>
         /// Details of the log. Exception information, stack trace, etc.
         /// </summary>
-        public virtual string Details { get; set; }
+        public virtual string? Details { get; set; }
 
         /// <summary>
         /// Data about this log record.

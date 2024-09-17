@@ -6,21 +6,21 @@
 </div>
 <div class="modal-body">
     <div class="mb-3">
-        <label asp-for="NewClaim.ClaimType" class="form-label"></label>
-        <input asp-for="NewClaim.ClaimType" class="form-control" autocomplete="on" list="claimtypeslist" autofocus />
+        <label asp-for="NewClaim!.ClaimType" class="form-label"></label>
+        <input asp-for="NewClaim!.ClaimType" class="form-control" autocomplete="on" list="claimtypeslist" autofocus />
     </div>
     <div class="mb-3">
-        <label asp-for="NewClaim.ClaimValue" class="form-label"></label>
-        <input asp-for="NewClaim.ClaimValue" class="form-control" autocomplete="off" />
+        <label asp-for="NewClaim!.ClaimValue" class="form-label"></label>
+        <input asp-for="NewClaim!.ClaimValue" class="form-control" autocomplete="off" />
     </div>
     <datalist id="claimtypeslist">
-        @foreach (var ct in Model.ClaimTypes)
+        @foreach (var ct in Model.ClaimTypes!)
         {
             <option>@ct</option>
         }
     </datalist>
 </div>
 <div class="modal-footer justify-content-start">
-    <button type="submit" asp-action="AddClaim" class="btn btn-primary default" formnovalidate><i class="fas fa-check"></i> Add</button>
+    <button type="submit" asp-action="AddClaim" class="btn btn-primary default" formnovalidate><i class="fas fa-solid fa-check"></i> Add</button>
     <button type="button" class="btn btn-link cancel ml-auto" data-bs-dismiss="modal">Close</button>
 </div>

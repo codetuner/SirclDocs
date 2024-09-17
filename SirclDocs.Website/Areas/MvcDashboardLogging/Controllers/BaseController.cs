@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
 {
@@ -15,19 +16,19 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
         public IActionResult MvcDashboardsDropdown()
         {
             var model = new List<string>();
-            foreach (var type in this.GetType().Assembly.GetTypes().Where(t => t.Name == "BaseController" && (t.Namespace?.Contains(".Areas.MvcDashboard") ?? false)))
+            foreach (var type in this.GetType().Assembly.GetTypes().Where(t => t.Name == "BaseController" && (t.Namespace?.Contains(".Areas.MvcDashboard") ?? false)).OrderBy(t => t.FullName))
             {
                 var accessible = true;
                 var aatributes = type.GetCustomAttributes(typeof(AuthorizeAttribute), false);
-                foreach (AuthorizeAttribute aatr in aatributes)
+                foreach (AuthorizeAttribute aatr in aatributes.Cast<AuthorizeAttribute>())
                 {
                     if (aatr.Roles != null && !aatr.Roles.Split(',').Select(s => s.Trim()).Any(r => User.IsInRole(r))) accessible = false;
                 }
 
                 if (accessible)
                 {
-                    var nsparts = type.Namespace.Split('.');
-                    model.Add(nsparts[nsparts.Length - 2]);
+                    var nsparts = type.Namespace!.Split('.');
+                    model.Add(nsparts[^2]);
                 }
             }
 
@@ -46,12 +47,23 @@ namespace SirclDocs.Website.Areas.MvcDashboardLogging.Controllers
             return this.StatusCode(204);
         }
 
-        protected IActionResult ForwardToAction(string action, string controller = null, object values = null)
+        protected IActionResult ForwardToAction(string action, string? controller = null, object? values = null)
         {
-            return this.Forward(Url.Action(action, controller, values));
+            return this.Forward(Url.Action(action, controller, values)!);
         }
 
-        protected void SetToastrMessage(string level, string text, string title = null)
+        protected IActionResult DialogClose()
+        {
+            return this.StatusCode(204);
+        }
+
+        protected IActionResult DialogOk()
+        {
+            Response.Headers["X-Sircl-History"] = "reload";
+            return this.StatusCode(204);
+        }
+
+        protected void SetToastrMessage(string level, string text, string? title = null)
         {
             if (String.IsNullOrWhiteSpace(title))
                 Response.Headers["X-Sircl-Toastr"] = $"{level}|{text}";

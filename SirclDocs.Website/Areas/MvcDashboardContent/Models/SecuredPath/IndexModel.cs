@@ -7,6 +7,5 @@ using System.Threading.Tasks;
 namespace SirclDocs.Website.Areas.MvcDashboardContent.Models.SecuredPath
 {
     public class IndexModel : BaseIndexModel<Data.Content.SecuredPath>
-    {
-    }
+    { }
 }

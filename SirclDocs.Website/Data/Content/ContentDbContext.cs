@@ -1,11 +1,7 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Text.Json;
 
 namespace SirclDocs.Website.Data.Content
 {
@@ -19,21 +15,84 @@ namespace SirclDocs.Website.Data.Content
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Document>()
-                .Property(d => d.State)
-                .HasComputedColumnSql("CASE WHEN [DeletedOnUtc] IS NOT NULL THEN 'Deleted' WHEN [PublishedOnUtc] IS NOT NULL THEN 'Published' WHEN [PublicationRequestedOnUtc] IS NOT NULL THEN 'Published' ELSE 'New' END");
+            //modelBuilder.Entity<Property>()
+            //    .Property(p => p.Settings)
+            //    .HasConversion(
+            //        v => ContentDbContext.ToString(v),
+            //        s => ContentDbContext.ToDictionary(s),
+            //        new ValueComparer<Dictionary<string, string>>(
+            //            (v1, v2) => String.Equals(ContentDbContext.ToString(v1), ContentDbContext.ToString(v2)),
+            //            v => ContentDbContext.ToString(v)!.GetHashCode(),
+            //            v => v.ToDictionary(p => p.Key, p => p.Value)
+            //        )
+            //    );
 
-            modelBuilder.Entity<Property>()
-                .Property(p => p.Settings)
+            // EF8 does not yet support dictionaries to JSON.
+            // Workaround, see: https://github.com/npgsql/efcore.pg/issues/1825#issuecomment-1668481365
+
+            // Make sure times are UTC:
+            modelBuilder.Entity<Document>().Property(p => p.CreatedOnUtc)
                 .HasConversion(
-                    v => ContentDbContext.ToString(v),
-                    s => ContentDbContext.ToDictionary(s),
-                    new ValueComparer<Dictionary<string, string>>(
-                        (v1, v2) => String.Equals(ContentDbContext.ToString(v1), ContentDbContext.ToString(v2)),
-                        v => ContentDbContext.ToString(v).GetHashCode(),
-                        v => v.ToDictionary(p => p.Key, p => p.Value)
-                    )
-                );
+                    v => v.ToUniversalTime(),
+                    v => new DateTime(v.Ticks, DateTimeKind.Utc));
+
+            // Make sure times are UTC:
+            modelBuilder.Entity<Document>().Property(p => p.ModifiedOnUtc)
+                .HasConversion(
+                    v => v.ToUniversalTime(),
+                    v => new DateTime(v.Ticks, DateTimeKind.Utc));
+
+            // Make sure times are UTC:
+            modelBuilder.Entity<Document>().Property(p => p.LastPublishedOnUtc)
+                .HasConversion(
+                    v => v.HasValue ? v.Value.ToUniversalTime() : (DateTime?)null,
+                    v => v.HasValue ? new DateTime(v.Value.Ticks, DateTimeKind.Utc) : (DateTime?)null);
+
+            // Make sure times are UTC:
+            modelBuilder.Entity<Document>().Property(p => p.DeletedOnUtc)
+                .HasConversion(
+                    v => v.HasValue ? v.Value.ToUniversalTime() : (DateTime?)null,
+                    v => v.HasValue ? new DateTime(v.Value.Ticks, DateTimeKind.Utc) : (DateTime?)null);
+
+            var jsonType = "nvarchar(max)";
+
+            modelBuilder.Entity<DataType>().Property(p => p.Settings)
+                .HasColumnType(jsonType)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, new JsonSerializerOptions(JsonSerializerDefaults.General)),
+                    v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, new JsonSerializerOptions(JsonSerializerDefaults.General))!);
+
+            modelBuilder.Entity<PropertyType>().Property(p => p.Settings)
+                .HasColumnType(jsonType)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, new JsonSerializerOptions(JsonSerializerDefaults.General)),
+                    v => DeserializeToDict(v));
+
+            modelBuilder.Entity<Property>().Property(p => p.Settings)
+                .HasColumnType(jsonType)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, new JsonSerializerOptions(JsonSerializerDefaults.General)),
+                    v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, new JsonSerializerOptions(JsonSerializerDefaults.General))!);
+
+            modelBuilder.Entity<PublishedDocument>().Property(p => p.Properties)
+                .HasColumnType(jsonType)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, new JsonSerializerOptions(JsonSerializerDefaults.General)),
+                    v => JsonSerializer.Deserialize<List<PublishedDocumentProperty>>(v, new JsonSerializerOptions(JsonSerializerDefaults.General))!);
+        }
+
+        private Dictionary<string, string> DeserializeToDict(string v)
+        {
+            try
+            {
+                var result = JsonSerializer.Deserialize<Dictionary<string, string>>(v, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw;
+            }
         }
 
         public DbSet<Content.Property> ContentProperties { get; set; }
@@ -46,13 +105,16 @@ namespace SirclDocs.Website.Data.Content
 
         public DbSet<Content.DocumentType> ContentDocumentTypes { get; set; }
 
+        public DbSet<Content.PublishedDocument> ContentPublishedDocuments { get; set; }
+
         public DbSet<Content.SecuredPath> ContentSecuredPaths { get; set; }
 
         public DbSet<Content.PathRedirection> ContentPathRedirections { get; set; }
 
+        /*
         #region Conversion helpers
 
-        static string ToString(Dictionary<string, string> data)
+        static string? ToString(Dictionary<string, string>? data)
         {
             if (data == null) return null;
             var sb = new StringBuilder();
@@ -66,7 +128,7 @@ namespace SirclDocs.Website.Data.Content
             return sb.ToString();
         }
 
-        static Dictionary<string, string> ToDictionary(string data)
+        static Dictionary<string, string>? ToDictionary(string? data)
         {
             if (data == null) return null;
             var result = new Dictionary<string, string>();
@@ -79,5 +141,6 @@ namespace SirclDocs.Website.Data.Content
         }
 
         #endregion
+        */
     }
 }

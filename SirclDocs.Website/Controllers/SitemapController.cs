@@ -28,9 +28,10 @@ namespace SirclDocs.Website.Controllers
         {
             var model = new IndexModel("https://www.getsircl.com");
 
-            var pages = context.ContentDocuments
+            var pages = context.ContentPublishedDocuments
                 .AsNoTracking()
-                .Where(d => d.DeletedOnUtc == null && d.PublishedOnUtc != null && d.Path != null && d.Type.Name.EndsWith("Page"))
+                .Include(d => d.Document)
+                .Where(d => d.Path != null && d.DocumentTypeName.EndsWith("Page"))
                 .OrderBy(d => d.Path).ThenBy(d => d.Id);
 
             var securedPaths = await context.ContentSecuredPaths.ToListAsync();
@@ -39,7 +40,7 @@ namespace SirclDocs.Website.Controllers
             {
                 if (securedPaths.Any(sp => page.Path.StartsWith(sp.Path))) continue;
 
-                model.Urls.Add(new SitemapUrl(page.Path, page.ModifiedOnUtc));
+                model.Urls.Add(new SitemapUrl(page.Path, page.Document.LastPublishedOnUtc));
             }
 
             return View(model);

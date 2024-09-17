@@ -7,26 +7,31 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SirclDocs.Website.Data.Content;
 
+#nullable disable
+
 namespace SirclDocs.Website.Data.Content.Migrations
 {
     [DbContext(typeof(ContentDbContext))]
-    [Migration("20211215200448_SeedInitialData")]
-    partial class SeedInitialData
+    [Migration("20240907000100_CreateContentSchema")]
+    partial class CreateContentSchema
     {
+        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.8")
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("SirclDocs.Website.Data.Content.DataType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -34,6 +39,7 @@ namespace SirclDocs.Website.Data.Content.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Settings")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Template")
@@ -50,8 +56,9 @@ namespace SirclDocs.Website.Data.Content.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(256)
@@ -69,6 +76,16 @@ namespace SirclDocs.Website.Data.Content.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTime?>("DeletedOnUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsLatestPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastPublishedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime?>("LastPublishedOnUtc")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ModifiedBy")
@@ -93,28 +110,9 @@ namespace SirclDocs.Website.Data.Content.Migrations
                     b.Property<int?>("PathSegmentsCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("PublicationRequestedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTime?>("PublicationRequestedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PublishedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTime?>("PublishedOnUtc")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("SortKey")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("State")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("nvarchar(max)")
-                        .HasComputedColumnSql("CASE WHEN [DeletedOnUtc] IS NOT NULL THEN 'Deleted' WHEN [PublishedOnUtc] IS NOT NULL THEN 'Published' WHEN [PublicationRequestedOnUtc] IS NOT NULL THEN 'Published' ELSE 'New' END");
 
                     b.Property<int>("TypeId")
                         .HasColumnType("int");
@@ -130,8 +128,9 @@ namespace SirclDocs.Website.Data.Content.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("BaseId")
                         .HasColumnType("int");
@@ -155,17 +154,54 @@ namespace SirclDocs.Website.Data.Content.Migrations
                     b.ToTable("DocumentType", "content");
                 });
 
+            modelBuilder.Entity("SirclDocs.Website.Data.Content.PathRedirection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FromPath")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsRegex")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ToPath")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PathRedirection", "content");
+                });
+
             modelBuilder.Entity("SirclDocs.Website.Data.Content.Property", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("DocumentId")
                         .HasColumnType("int");
 
                     b.Property<string>("Settings")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("TypeId")
@@ -187,8 +223,9 @@ namespace SirclDocs.Website.Data.Content.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("DataTypeId")
                         .HasColumnType("int");
@@ -205,6 +242,7 @@ namespace SirclDocs.Website.Data.Content.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Settings")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -216,12 +254,70 @@ namespace SirclDocs.Website.Data.Content.Migrations
                     b.ToTable("PropertyType", "content");
                 });
 
+            modelBuilder.Entity("SirclDocs.Website.Data.Content.PublishedDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Culture")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DocumentTypeName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Path")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int?>("PathSegmentsCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Properties")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SortKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ViewName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.ToTable("PublishedDocument", "content");
+                });
+
             modelBuilder.Entity("SirclDocs.Website.Data.Content.SecuredPath", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Path")
                         .IsRequired()
@@ -291,6 +387,17 @@ namespace SirclDocs.Website.Data.Content.Migrations
                     b.Navigation("DataType");
 
                     b.Navigation("DocumentType");
+                });
+
+            modelBuilder.Entity("SirclDocs.Website.Data.Content.PublishedDocument", b =>
+                {
+                    b.HasOne("SirclDocs.Website.Data.Content.Document", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
                 });
 
             modelBuilder.Entity("SirclDocs.Website.Data.Content.Document", b =>

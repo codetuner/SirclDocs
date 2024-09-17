@@ -7,6 +7,6 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Models.Document
 {
     public class NewModel
     {
-        public List<Data.Content.DocumentType> DocumentTypes { get; internal set; }
+        public List<Data.Content.DocumentType> DocumentTypes { get; internal set; } = [];
     }
 }

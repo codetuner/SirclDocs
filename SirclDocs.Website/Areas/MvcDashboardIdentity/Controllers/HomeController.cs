@@ -1,11 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SirclDocs.Website.Areas.MvcDashboardIdentity.Models.Home;
 using SirclDocs.Website.Data;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
 {
@@ -30,10 +26,12 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
         [HttpGet]
         public IActionResult TopMenu()
         {
-            var model = new TopMenuModel();
-            model.UserCount = context.Users.Count();
-            model.RoleCount = context.Roles.Count();
-            return View(model);
+            var model = new TopMenuModel
+            {
+                UserCount = context.Users.Count(),
+                RoleCount = context.Roles.Count()
+            };
+            return PartialView(model);
         }
 
         [HttpGet]

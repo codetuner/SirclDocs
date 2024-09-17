@@ -1,10 +1,14 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
+#nullable disable
+
 namespace SirclDocs.Website.Data.Content.Migrations
 {
+    /// <inheritdoc />
     public partial class CreateContentSchema : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.EnsureSchema(
@@ -19,7 +23,7 @@ namespace SirclDocs.Website.Data.Content.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Template = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Settings = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Settings = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -46,8 +50,26 @@ namespace SirclDocs.Website.Data.Content.Migrations
                         column: x => x.BaseId,
                         principalSchema: "content",
                         principalTable: "DocumentType",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PathRedirection",
+                schema: "content",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Position = table.Column<int>(type: "int", nullable: false),
+                    FromPath = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    ToPath = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    StatusCode = table.Column<int>(type: "int", nullable: false),
+                    IsRegex = table.Column<bool>(type: "bit", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PathRedirection", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -58,7 +80,8 @@ namespace SirclDocs.Website.Data.Content.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Path = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    Roles = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true)
+                    Roles = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -79,17 +102,16 @@ namespace SirclDocs.Website.Data.Content.Migrations
                     PathSegmentsCount = table.Column<int>(type: "int", nullable: true),
                     TypeId = table.Column<int>(type: "int", nullable: false),
                     Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AutoPublish = table.Column<bool>(type: "bit", nullable: false),
+                    IsLatestPublished = table.Column<bool>(type: "bit", nullable: false),
                     CreatedOnUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     ModifiedOnUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedBy = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    PublicationRequestedOnUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    PublicationRequestedBy = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    PublishedOnUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    PublishedBy = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    LastPublishedOnUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastPublishedBy = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     DeletedOnUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    State = table.Column<string>(type: "nvarchar(max)", nullable: true, computedColumnSql: "CASE WHEN [DeletedOnUtc] IS NOT NULL THEN 'Deleted' WHEN [PublishedOnUtc] IS NOT NULL THEN 'Published' WHEN [PublicationRequestedOnUtc] IS NOT NULL THEN 'To publish' ELSE 'New' END")
+                    DeletedBy = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -114,7 +136,7 @@ namespace SirclDocs.Website.Data.Content.Migrations
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
                     DocumentTypeId = table.Column<int>(type: "int", nullable: false),
                     DataTypeId = table.Column<int>(type: "int", nullable: false),
-                    Settings = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Settings = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -136,6 +158,36 @@ namespace SirclDocs.Website.Data.Content.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PublishedDocument",
+                schema: "content",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DocumentId = table.Column<int>(type: "int", nullable: false),
+                    Version = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Culture = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    SortKey = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Path = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    PathSegmentsCount = table.Column<int>(type: "int", nullable: true),
+                    DocumentTypeName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    ViewName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Properties = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PublishedDocument", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PublishedDocument_Document_DocumentId",
+                        column: x => x.DocumentId,
+                        principalSchema: "content",
+                        principalTable: "Document",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Property",
                 schema: "content",
                 columns: table => new
@@ -145,7 +197,7 @@ namespace SirclDocs.Website.Data.Content.Migrations
                     DocumentId = table.Column<int>(type: "int", nullable: false),
                     TypeId = table.Column<int>(type: "int", nullable: true),
                     Value = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Settings = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Settings = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -162,8 +214,7 @@ namespace SirclDocs.Website.Data.Content.Migrations
                         column: x => x.TypeId,
                         principalSchema: "content",
                         principalTable: "PropertyType",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -201,12 +252,27 @@ namespace SirclDocs.Website.Data.Content.Migrations
                 schema: "content",
                 table: "PropertyType",
                 column: "DocumentTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PublishedDocument_DocumentId",
+                schema: "content",
+                table: "PublishedDocument",
+                column: "DocumentId");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "PathRedirection",
+                schema: "content");
+
+            migrationBuilder.DropTable(
                 name: "Property",
+                schema: "content");
+
+            migrationBuilder.DropTable(
+                name: "PublishedDocument",
                 schema: "content");
 
             migrationBuilder.DropTable(
@@ -214,11 +280,11 @@ namespace SirclDocs.Website.Data.Content.Migrations
                 schema: "content");
 
             migrationBuilder.DropTable(
-                name: "Document",
+                name: "PropertyType",
                 schema: "content");
 
             migrationBuilder.DropTable(
-                name: "PropertyType",
+                name: "Document",
                 schema: "content");
 
             migrationBuilder.DropTable(

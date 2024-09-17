@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using SirclDocs.Website.Areas.MvcDashboardContent.Models.PathRedirection;
 using SirclDocs.Website.Data.Content;
 using System;
@@ -52,7 +51,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         public IActionResult New()
         {
             var model = new EditModel();
-            model.Item = new Data.Content.PathRedirection();
+            model.Item = Activator.CreateInstance<Data.Content.PathRedirection>();
             return EditView(model);
         }
 
@@ -60,8 +59,8 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         public IActionResult Edit(int id)
         {
             var model = new EditModel();
-            model.Item = context.ContentPathRedirections.Find(id);
-            if (model.Item == null) return new NotFoundResult();
+            model.Item = context.ContentPathRedirections.Find(id)
+                ?? throw new BadHttpRequestException("Object not found.", 404);
             return EditView(model);
         }
 
@@ -89,7 +88,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
                 }
             }
 
-            Response.Headers.Add("X-Sircl-History-Replace", Url.Action("Edit", new { id = model.Item.Id }));
+            Response.Headers["X-Sircl-History-Replace"] = Url.Action("Edit", new { id = model.Item.Id });
             return EditView(model);
         }
 
@@ -98,7 +97,8 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
         {
             try
             {
-                var item = context.ContentSecuredPaths.Find(id);
+                var item = context.ContentSecuredPaths.Find(id)
+                    ?? throw new BadHttpRequestException("Object not found.", 404);
                 context.Remove(item);
                 context.SaveChanges();
                 cache.Remove("Content:PathRedirections");
@@ -115,7 +115,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
 
         private IActionResult EditView(EditModel model)
         {
-            model.PathsList = context.ContentDocuments.Select(d => d.Path).Distinct().OrderBy(p => p).ToList();
+            model.PathsList = context.ContentDocuments.Where(s => s.Path != null).Select(d => d.Path!).Distinct().OrderBy(p => p).ToList();
             return View("Edit", model);
         }
 

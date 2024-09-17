@@ -4,7 +4,11 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Security.Principal;
+using System.Threading;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Data.Content
 {
@@ -15,37 +19,43 @@ namespace SirclDocs.Website.Data.Content
     public class Document
     {
         #region Fields
-        private string path;
+        private string? path;
         #endregion
-
-        /// <summary>
-        /// States a document can have.
-        /// </summary>
-        public static readonly string[] States = new string[] { "New", "To publish", "Published", "Deleted" };
 
         /// <summary>
         /// Identifier of the document.
         /// </summary>
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public virtual int Id { get; set; }
 
         /// <summary>
         /// Name of the document.
         /// </summary>
         [Required, MaxLength(200)]
-        public virtual string Name { get; set; }
+        public virtual required string Name { get; set; }
 
+        [NotMapped]
+        public string State
+        {
+            get
+            {
+                if (this.DeletedOnUtc != null) return "deleted";
+                else if (this.LastPublishedOnUtc == null) return "new";
+                else if (this.IsLatestPublished) return "uptodate";
+                else return "outdated";
+            }
+        }
         /// <summary>
         /// Culture of the document.
         /// </summary>
         [MaxLength(200)]
-        public virtual string Culture { get; set; }
+        public virtual string? Culture { get; set; }
 
         /// <summary>
         /// SortKey used to sort child douments of the same parent (according to path).
         /// </summary>
         [MaxLength(200)]
-        public virtual string SortKey { get; set; }
+        public virtual string? SortKey { get; set; }
 
         /// <summary>
         /// Path of the document.
@@ -53,7 +63,7 @@ namespace SirclDocs.Website.Data.Content
         /// <remarks>Automatically recalculates the PathSegmentsCount.</remarks>
         [MaxLength(2000)]
         [BackingField(nameof(path))]
-        public virtual string Path
+        public virtual string? Path
         {
             get
             {
@@ -84,7 +94,7 @@ namespace SirclDocs.Website.Data.Content
         /// I.e. if the path is "/Home/About", would return ["Home", "About"].
         /// </summary>
         [NotMapped]
-        public string[] PathSegments
+        public string[]? PathSegments
         {
             get
             {
@@ -121,13 +131,13 @@ namespace SirclDocs.Website.Data.Content
         /// Type of the document.
         /// </summary>
         [ForeignKey(nameof(TypeId))]
-        public virtual DocumentType Type { get; set; }
+        public virtual DocumentType? Type { get; set; }
 
         /// <summary>
         /// Properties of this document.
         /// </summary>
         [InverseProperty(nameof(Property.Document))]
-        public virtual List<Property> Properties { get; set; } = new List<Property>();
+        public virtual List<Property>? Properties { get; set; }
 
         /// <summary>
         /// [NotMapped] Returns the property with the given name.
@@ -143,15 +153,25 @@ namespace SirclDocs.Website.Data.Content
         {
             get
             {
-                return this.Properties.FirstOrDefault(p => p.Type.Name == name)
-                    ?? new Property() { Document = this, Type = new PropertyType() { Name = name } };
+                return this.Properties?.FirstOrDefault(p => p.Type?.Name == name)
+                    ?? new Property() { Document = this, Type = new PropertyType() { Name = name, DataType = null!, DocumentType = null! } };
             }
         }
 
         /// <summary>
         /// Internal notes.
         /// </summary>
-        public virtual string Notes { get; set; }
+        public virtual string? Notes { get; set; }
+
+        /// <summary>
+        /// Whether to publish the document on every update.
+        /// </summary>
+        public virtual bool AutoPublish { get; set; }
+
+        /// <summary>
+        /// Whether the latest version of this document is also the published version.
+        /// </summary>
+        public virtual bool IsLatestPublished { get; set; }
 
         /// <summary>
         /// UTC date/time this document was created.
@@ -162,7 +182,7 @@ namespace SirclDocs.Website.Data.Content
         /// User this document was created by.
         /// </summary>
         [MaxLength(256)]
-        public virtual string CreatedBy { get; set; }
+        public virtual string? CreatedBy { get; set; }
 
         /// <summary>
         /// UTC date/time this document was last modified.
@@ -173,29 +193,18 @@ namespace SirclDocs.Website.Data.Content
         /// User this document was last modified by.
         /// </summary>
         [MaxLength(256)]
-        public virtual string ModifiedBy { get; set; }
+        public virtual string? ModifiedBy { get; set; }
 
         /// <summary>
-        /// UTC date/time this document was requested publication by.
+        /// UTC date/time this document was last published.
         /// </summary>
-        public virtual DateTime? PublicationRequestedOnUtc { get; set; }
+        public virtual DateTime? LastPublishedOnUtc { get; set; }
 
         /// <summary>
-        /// User this document was requested publication by.
-        /// </summary>
-        [MaxLength(256)]
-        public virtual string PublicationRequestedBy { get; set; }
-
-        /// <summary>
-        /// UTC date/time this document was published.
-        /// </summary>
-        public virtual DateTime? PublishedOnUtc { get; set; }
-
-        /// <summary>
-        /// User this document was published by.
+        /// User this document was last published by.
         /// </summary>
         [MaxLength(256)]
-        public virtual string PublishedBy { get; set; }
+        public virtual string? LastPublishedBy { get; set; }
 
         /// <summary>
         /// UTC date/time this document was deleted.
@@ -206,64 +215,143 @@ namespace SirclDocs.Website.Data.Content
         /// User this document was deleted by.
         /// </summary>
         [MaxLength(256)]
-        public virtual string DeletedBy { get; set; }
+        public virtual string? DeletedBy { get; set; }
 
         /// <summary>
-        /// Current state of this document.
+        /// Saves the current document.
         /// </summary>
-        public string State { get; private set; }
-
-        /// <summary>
-        /// Tries to request publication.
-        /// </summary>
-        public bool TryRequestPublication(string byUserName)
+        public void Save(ContentDbContext context, IIdentity? byUser)
         {
-            if (this.PublishedOnUtc == null && this.PublicationRequestedOnUtc == null)
+            // Attach as Updated or Added to context:
+            var entry = context.Update(this);
+
+            // A newer version has been saved:
+            this.IsLatestPublished = false;
+
+            // Mark modified:
+            this.ModifiedBy = byUser?.Name;
+            this.ModifiedOnUtc = DateTime.UtcNow;
+            entry.Property(nameof(this.LastPublishedBy)).IsModified = false;
+            entry.Property(nameof(this.LastPublishedOnUtc)).IsModified = false;
+
+            // Mark not deleted:
+            this.DeletedBy = null;
+            this.DeletedOnUtc = null;
+
+            if (this.Id == 0)
             {
-                this.PublicationRequestedOnUtc = DateTime.UtcNow;
-                this.PublicationRequestedBy = byUserName;
-                return true;
+                // Mark created:
+                this.CreatedBy = this.ModifiedBy;
+                this.CreatedOnUtc = this.ModifiedOnUtc;
             }
             else
             {
-                return false;
+                entry.Property(nameof(CreatedBy)).IsModified = false;
+                entry.Property(nameof(CreatedOnUtc)).IsModified = false;
             }
         }
 
         /// <summary>
-        /// Tries to publish. Publication must have been requested.
+        /// Publishes or updates the publication of this document.
         /// </summary>
-        public bool TryPublish(string byUserName)
+        public async Task<PublishedDocument> PublishAsync(ContentDbContext context, IIdentity? byUser, bool forPreview = false, CancellationToken ct = default)
         {
-            if (this.PublishedOnUtc == null && this.PublicationRequestedOnUtc != null)
+            // Ensure required data is loaded if no eager loading was done and lazy loading is not enabled:
+            if (this.Id == 0 && !forPreview) throw new InvalidOperationException("A document needs to be saved before it can be published.");
+            if (this.Type == null) await context.Entry(this).Reference(e => e.Type).LoadAsync(ct);
+            if (this.Type == null) throw new InvalidOperationException("A document needs to have a type in order to be published.");
+            if (this.Properties == null) await context.Entry(this).Collection(e => e.Properties!).LoadAsync(ct);
+            if (this.Properties == null) this.Properties = new();
+            foreach(var item in this.Properties)
             {
-                this.PublishedOnUtc = DateTime.UtcNow;
-                this.PublishedBy = byUserName;
-                return true;
+                if (item.Type == null) await context.Entry(item).Reference(e => e.Type).LoadAsync(ct);
+                if (item.Type == null) continue;
+                if (item.Type.DataType == null) await context.Entry(item.Type).Reference(e => e.DataType).LoadAsync(ct);
             }
-            else
+
+            // Get or create published document instance:
+            var published = await context.ContentPublishedDocuments.SingleOrDefaultAsync(d => d.DocumentId == this.Id, ct);
+            if (published == null)
             {
-                return false;
+                published = new PublishedDocument() { Document = this, DocumentTypeName = this.Type.Name, Name = this.Name, Version = 0 };
+                context.ContentPublishedDocuments.Add(published);
             }
+
+            // Update or publish changes:
+            published.Version++;
+            published.Name = this.Name;
+            published.Culture = this.Culture;
+            published.Path = this.Path;
+            published.PathSegmentsCount = this.PathSegmentsCount;
+            published.SortKey = this.SortKey;
+            published.DocumentTypeName = this.Type.Name;
+            published.ViewName = this.Type.ViewName;
+            published.Properties = this.Properties
+                .Where(p => p.Type != null && p.Type.DataType != null)
+                .Select(p => new PublishedDocumentProperty()
+                {
+                    Name = p.Type!.Name,
+                    Value = p.Value,
+                    Settings = p.CombinedSettings,
+                    DataTypeName = p.Type.DataType!.Name,
+                    DataTypeTemplate = p.Type.DataType.Template
+                }).ToList();
+
+            // Mark published:
+            this.IsLatestPublished = true;
+            this.LastPublishedBy = byUser?.Name;
+            this.LastPublishedOnUtc = DateTime.UtcNow;
+
+            // Mark modified:
+            this.ModifiedBy = byUser?.Name;
+            this.ModifiedOnUtc = DateTime.UtcNow;
+
+            // Return published document for preview:
+            return published;
         }
 
         /// <summary>
-        /// Tries to cancel a publication or request for publication.
+        /// Withdraw this document from publication.
         /// </summary>
-        public bool TryUnpublish(string byUserName)
+        public async Task UnpublishAsync(ContentDbContext context, IIdentity? byUser, CancellationToken ct = default)
         {
-            if (this.PublishedOnUtc != null || this.PublicationRequestedOnUtc != null)
-            {
-                this.PublishedOnUtc = null;
-                this.PublishedBy = null;
-                this.PublicationRequestedOnUtc = null;
-                this.PublicationRequestedBy = null;
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            // Delete published version:
+            await context.ContentPublishedDocuments.Where(d => d.DocumentId == this.Id).ExecuteDeleteAsync(ct);
+
+            // Mark published:
+            this.IsLatestPublished = false;
+            this.LastPublishedBy = null;
+            this.LastPublishedOnUtc = null;
+
+            // Mark modified:
+            this.ModifiedBy = byUser?.Name;
+            this.ModifiedOnUtc = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Soft-deletes the current document.
+        /// </summary>
+        public async Task DeleteAsync(ContentDbContext context, IIdentity? byUser, CancellationToken ct = default)
+        {
+            // Deleting implies unpublishing:
+            await context.ContentPublishedDocuments.Where(d => d.DocumentId == this.Id).ExecuteDeleteAsync(ct);
+            this.IsLatestPublished = false;
+            this.LastPublishedBy = null;
+            this.LastPublishedOnUtc = null;
+
+            // Soft delete:
+            this.DeletedBy = byUser?.Name;
+            this.DeletedOnUtc = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Restores after soft-delete the current document.
+        /// </summary>
+        public void Restore(ContentDbContext context, IIdentity? byUser)
+        {
+            // Restore:
+            this.DeletedBy = null;
+            this.DeletedOnUtc = null;
         }
     }
 }

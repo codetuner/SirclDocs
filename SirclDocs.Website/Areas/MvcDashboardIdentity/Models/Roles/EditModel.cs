@@ -8,5 +8,6 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Models.Roles
 {
     public class EditModel : BaseEditModel<IdentityRole>
     {
+        public bool IsNew => this.Item.Id == "NEW";
     }
 }

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace SirclDocs.Website.Logging
@@ -14,13 +12,18 @@ namespace SirclDocs.Website.Logging
         {
             _next = next;
         }
-        
+
         public async Task InvokeAsync(HttpContext context, RequestLogger requestLogger)
         {
             PreInvoke(context, requestLogger);
             try
             {
                 await _next(context);
+            }
+            catch (Exception ex)
+            {
+                requestLogger.Exception = ex;
+                throw;
             }
             finally
             {

@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Data.Content
 {
@@ -17,7 +15,7 @@ namespace SirclDocs.Website.Data.Content
         /// <summary>
         /// Identifier of the property instance.
         /// </summary>
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public virtual int Id { get; set; }
 
         /// <summary>
@@ -29,7 +27,7 @@ namespace SirclDocs.Website.Data.Content
         /// Document the property instance belongs to.
         /// </summary>
         [ForeignKey(nameof(DocumentId))]
-        public virtual Document Document { get; set; }
+        public virtual Document? Document { get; set; }
 
         /// <summary>
         /// Type of the property instance.
@@ -40,30 +38,18 @@ namespace SirclDocs.Website.Data.Content
         /// Type of the property instance.
         /// </summary>
         [ForeignKey(nameof(TypeId))]
-        public virtual PropertyType Type { get; set; }
-
-        ///// <summary>
-        ///// Name of the property type.
-        ///// </summary>
-        //[NotMapped]
-        //public virtual string Name { get => this.Type.Name; }
-
-        ///// <summary>
-        ///// Data type of the property.
-        ///// </summary>
-        //[NotMapped]
-        //public virtual DataType DataType { get => this.Type.DataType; }
+        public virtual PropertyType? Type { get; set; }
 
         /// <summary>
         /// Value of this property instance.
         /// </summary>
-        public virtual string Value { get; set; }
+        public virtual string? Value { get; set; }
 
         /// <summary>
         /// Json settings for this data type.
         /// The settings are passed to the ViewData of the EditorTemplates and DisplayTemplates.
         /// </summary>
-        public virtual Dictionary<string, string> Settings { get; set; }
+        public virtual Dictionary<string, string> Settings { get; set; } = [];
 
         /// <summary>
         /// Settings of this property combined with the settings of its type and datatype.

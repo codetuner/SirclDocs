@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace SirclDocs.Website.Areas.MvcDashboardIdentity.TagHelpers
 {
     [HtmlTargetElement("th", Attributes = "asp-order")]
@@ -15,10 +17,10 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.TagHelpers
         public string Name { get; set; } = "order";
 
         [HtmlAttributeName("field-name")]
-        public string FieldName { get; set; }
+        public string? FieldName { get; set; }
 
         [HtmlAttributeName("asp-order")]
-        public string CurrentOrder { get; set; }
+        public string? CurrentOrder { get; set; }
 
         public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
@@ -52,6 +54,5 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.TagHelpers
 
             output.Content.SetHtmlContent(builder.ToString());
         }
-
     }
 }

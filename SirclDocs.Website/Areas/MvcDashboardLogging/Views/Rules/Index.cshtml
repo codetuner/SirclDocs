@@ -1,0 +1,94 @@
+﻿@model IndexModel
+@{ 
+    ViewBag.Title = "Log Action Rules";
+}
+
+<h1>Rules</h1>
+
+<form class="card p-3 bg-white onchange-submit" action="@Url.Action("Index")" method="get" history="replace" sub-target="#subTarget">
+
+    <div class="d-flex justify-content-between">
+        <a href="@Url.Action("New")" class="btn btn-primary" onkeydown-click="+"><i class="spinner fas fa-solid fa-plus"></i> New</a>
+        <div class="flex-grow-1"></div>
+        <div>
+            <select class="form-control auto-width" asp-for="ApplicationFilter" onload-load="@Url.Action("ApplicationNameOptions", "Items", new { Selected = Model.ApplicationFilter })">
+                <option value="">All apps</option>
+                @if (!String.IsNullOrEmpty(Model.ApplicationFilter))
+                {
+                    <option value="@Model.ApplicationFilter">@Model.ApplicationFilter</option>
+                }
+            </select>
+        </div>
+        <div class="ms-2">
+            <select class="form-control" name="AspectFilter">
+                <option value="">All types</option>
+                <option value="Error" selected="@(Model.AspectFilter == "Error" ? "selected" : null)">Error</option>
+                <option value="Security" selected="@(Model.AspectFilter == "Security" ? "selected" : null)">Security</option>
+                <option value="Attention" selected="@(Model.AspectFilter == "Attention" ? "selected" : null)">Attention</option>
+                <option value="NotFound" selected="@(Model.AspectFilter == "NotFound" ? "selected" : null)">NotFound</option>
+                <option value="Timing" selected="@(Model.AspectFilter == "Timing" ? "selected" : null)">Timing</option>
+                <option value="Information" selected="@(Model.AspectFilter == "Information" ? "selected" : null)">Information</option>
+            </select>
+        </div>
+        <div class="ms-2" style="border: solid 1px var(--bs-border-color); border-radius: var(--bs-border-radius); white-space: nowrap;">
+            <label class="btn"><input type="checkbox" name="ActiveFilter" value="true" checked="@((Model.ActiveFilter) ? "checked" : null)" /> Active</label>
+        </div>
+        <div class="ms-2">
+            <input type="search" class="form-control oninput-change" asp-for="Query" style="max-width: 280px;" autocomplete="off" placeholder="Search" />
+        </div>
+        <div class="ms-2">
+            <a href="@Url.Action("Index")" history="replace" class="btn btn-light" title="Clear filter"><i class="spinner fas fa-solid fa-eraser"></i></a>
+        </div>
+    </div>
+
+    <div id="subTarget">
+        <div class="overlay" hidden></div>
+
+        <div class="table-responsive">
+            <table class="table table-hover mt-3">
+                <thead>
+                    <tr>
+                        <th class="onchange-nosubmit"><input type="checkbox" ifchecked-check="<table|>tbody input[type=checkbox]" ifunchecked-uncheck="<table|>tbody input[type=checkbox]" /></th>
+                        <th style="white-space: nowrap" asp-order="@Model.Order">Id</th>
+                        <th style="white-space: nowrap" asp-order="@Model.Order">Action</th>
+                        <th style="white-space: nowrap" asp-order="@Model.Order" field-name="ApplicationName">Application</th>
+                        <th style="white-space: nowrap" asp-order="@Model.Order">Aspect</th>
+                        <th style="white-space: nowrap" asp-order="@Model.Order">Method</th>
+                        <th style="white-space: nowrap" asp-order="@Model.Order" field-name="Url">URL</th>
+                        <th style="white-space: nowrap" asp-order="@Model.Order">StatusCode</th>
+                        <th style="white-space: nowrap" asp-order="@Model.Order">Type</th>
+                        <th style="white-space: nowrap" asp-order="@Model.Order">Host</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr href="@Url.Action("Edit", new { id = item.Id })" class="@(!item.IsActive ? "rule-inactive-row" : null)">
+                            <td class="onchange-nosubmit" onclick-propagate="off"><input type="checkbox" name="Selection" value="@item.Id" /></td>
+                            <td align="right">@item.Id</td>
+                            <td><strong>@item.Action</strong></td>
+                            <td><strong>@item.ApplicationName</strong></td>
+                            <td>
+                                @if (item.Aspect != null)
+                                {
+                                    @:@Html.Raw(item.Aspect.HtmlIcon)
+                                    @:
+                                    @:@item.Aspect.Name
+                                }
+                            </td>
+                            <td>@item.Method</td>
+                            <td>@item.Url</td>
+                            <td>@item.StatusCode</td>
+                            <td>@item.Type</td>
+                            <td style="white-space: nowrap">@item.Host</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <pagesize-select asp-for="PageSize" class="form-control auto-width float-end"></pagesize-select>
+        <pagination-nav asp-for="Page" max="Model.MaxPage" />
+
+    </div>
+
+</form>

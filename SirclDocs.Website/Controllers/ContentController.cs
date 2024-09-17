@@ -6,9 +6,12 @@ using SirclDocs.Website.Data;
 using SirclDocs.Website.Data.Content;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Controllers
 {
@@ -36,18 +39,21 @@ namespace SirclDocs.Website.Controllers
             // Get current path:
             path = "/" + path;
 
+            // Store path in ViewBag:
+            ViewBag.Path = path;
+
             // Get current culture:
-            var currentUICulture = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
+            var currentUICulture = System.Threading.Thread.CurrentThread.CurrentUICulture;
 
             // Check for redirections first:
-            if (!cache.TryGetValue("Content:PathRedirections", out List<PathRedirection> redirections))
+            if (!cache.TryGetValue("Content:PathRedirections", out List<PathRedirection>? redirections))
             {
                 redirections = context.ContentPathRedirections.AsNoTracking().OrderBy(r => r.Position).ThenBy(r => r.Id).ToList();
                 cache.Set("Content:PathRedirections", redirections);
             }
 
             // Apply first found matching redirection, if any:
-            foreach (var redirection in redirections)
+            foreach (var redirection in redirections!)
             {
                 // If FromPath is not a regular expression:
                 if (!redirection.IsRegex)
@@ -55,14 +61,14 @@ namespace SirclDocs.Website.Controllers
                     // If match: redirect:
                     if (path.Equals(redirection.FromPath, StringComparison.OrdinalIgnoreCase))
                     {
-                        Response.Headers.Add("Location", redirection.ToPath);
+                        Response.Headers["Location"] = redirection.ToPath;
                         return StatusCode(redirection.StatusCode);
                     }
                 }
                 else // If FromPath is a regular expression:
                 {
                     // Cache compiled version of FromPath regex in cache:
-                    if (!compiledRedirectRegex.TryGetValue(redirection.FromPath, out Regex fromPathRegex))
+                    if (!compiledRedirectRegex.TryGetValue(redirection.FromPath, out Regex? fromPathRegex))
                     {
                         fromPathRegex = new Regex(redirection.FromPath, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
                         compiledRedirectRegex[redirection.FromPath] = fromPathRegex;
@@ -72,7 +78,7 @@ namespace SirclDocs.Website.Controllers
                     // If match: redirect:
                     if (match.Success)
                     {
-                        Response.Headers.Add("Location", match.Result(redirection.ToPath));
+                        Response.Headers["Location"] = match.Result(redirection.ToPath);
                         return StatusCode(redirection.StatusCode);
                     }
                 }
@@ -85,10 +91,10 @@ namespace SirclDocs.Website.Controllers
                 // Check roles:
                 foreach (var securedPath in securedPaths)
                 {
-                    var roles = securedPath.Roles.Split(',').Select(r => r.Trim()).Where(r => r.Length > 0).ToList();
+                    var roles = securedPath.Roles!.Split(',').Select(r => r.Trim()).Where(r => r.Length > 0).ToList();
                     if (roles.Any(r => r == "*"))
                     {
-                        if (!this.User.Identity.IsAuthenticated) return Forbid();
+                        if (!this.User.Identity?.IsAuthenticated ?? false) return Forbid();
                     }
                     else
                     {
@@ -98,46 +104,23 @@ namespace SirclDocs.Website.Controllers
             }
 
             // Retrieve candidate documents:
-            var model = new Models.Content.ContentModel();
-            model.Document = await context.ContentDocuments
-                .Include(d => d.Type)
-                .Include(d => d.Properties).ThenInclude(p => p.Type).ThenInclude(t => t.DataType)
-                // Where path matches, document type has viewname, is published and not deleted:
-                .Where(d => d.Path == path && d.Type.ViewName != null && d.PublishedOnUtc <= DateTime.UtcNow && d.DeletedOnUtc == null)
+            var document = await context.ContentPublishedDocuments
+                // Where path matches and has viewname:
+                .Where(d => d.Path == path && d.ViewName != null)
                 // Get the best match for the current UI culture:
-                .Where(d => d.Culture == currentUICulture || d.Culture == null)
+                .Where(d => d.Culture == currentUICulture.Name || d.Culture == currentUICulture.TwoLetterISOLanguageName || d.Culture == null)
                 .OrderByDescending(d => d.Culture)
                 .FirstOrDefaultAsync();
-
-            if (model.Document == null)
+            if (document == null)
             {
                 return View("NotFound");
-                //return new NotFoundObjectResult(null);
             }
-            else
-            {
-                // Retrieve published ancestors and children of document;
-                if (model.Document.PathSegmentsCount.HasValue)
-                {
-                    var childPathSegmentsCount = model.Document.PathSegmentsCount + 1;
-                    model.Children = await context.ContentDocuments
-                        .Include(d => d.Type)
-                        .Include(d => d.Properties).ThenInclude(p => p.Type).ThenInclude(t => t.DataType)
-                        .Where(d => d.Path.StartsWith(path) && d.PathSegmentsCount == childPathSegmentsCount && d.PublishedOnUtc <= DateTime.UtcNow && d.DeletedOnUtc == null)
-                        .Where(d => d.Culture == model.Document.Culture)
-                        .OrderBy(d => d.SortKey).ThenBy(d => d.Name)
-                        .ToListAsync();
 
-                    model.Ancestors = await context.ContentDocuments
-                        .Include(d => d.Type)
-                        .Include(d => d.Properties).ThenInclude(p => p.Type).ThenInclude(t => t.DataType)
-                        .Where(d => path.StartsWith(d.Path) && d.PublishedOnUtc <= DateTime.UtcNow && d.DeletedOnUtc == null)
-                        .OrderBy(d => d.SortKey).ThenBy(d => d.Name)
-                        .ToListAsync();
-                }
+            // Build model:
+            var model = new Models.Content.ContentModel() { Document = document };
 
-                return View(model.Document.Type.ViewName, model);
-            }
+            // Render view:
+            return View(model.Document.ViewName, model);
         }
     }
 }

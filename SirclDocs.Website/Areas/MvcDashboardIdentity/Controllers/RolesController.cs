@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using SirclDocs.Website.Areas.MvcDashboardIdentity.Models;
 using SirclDocs.Website.Areas.MvcDashboardIdentity.Models.Roles;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
 {
@@ -16,7 +16,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
 
         private readonly RoleManager<IdentityRole> roleManager;
 
-        public RolesController(IServiceProvider services, RoleManager<IdentityRole> roleManager)
+        public RolesController(RoleManager<IdentityRole> roleManager)
         {
             this.roleManager = roleManager;
         }
@@ -31,7 +31,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
             var query = roleManager.Roles.AsQueryable();
             if (!String.IsNullOrWhiteSpace(model.Query))
                 query = query
-                    .Where(d => d.NormalizedName.Contains(model.Query));
+                    .Where(d => d.NormalizedName!.Contains(model.Query));
 
             // Build model:
             var count = query
@@ -72,7 +72,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
         public async Task<IActionResult> Edit(string id = "0")
         {
             // Retrieve data:
-            var role = await roleManager.FindByIdAsync(id);
+            var role = (await roleManager.FindByIdAsync(id)) ?? new IdentityRole() { Id = "NEW" };
 
             // Build model:
             var model = new EditModel() { Item = role };
@@ -84,7 +84,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
         [HttpPost]
         public async Task<IActionResult> Save(EditModel model)
         {
-            IdentityResult result = null;
+            IdentityResult? result = null;
             if (this.ModelState.IsValid)
             {
                 result = await this.SaveRoleAsync(model.Item);
@@ -102,7 +102,8 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
         [HttpGet]
         public async Task<IActionResult> DeleteRequest(string id)
         {
-            var role = await roleManager.FindByIdAsync(id);
+            var role = await roleManager.FindByIdAsync(id)
+                ?? throw new NullReferenceException($"Failed to find role with Id {id}.");
             return View("DeleteRequest", new DeleteRequestModel() { Item = role });
         }
 
@@ -127,7 +128,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
             }
         }
 
-        private IActionResult EditView(EditModel model, IdentityResult identityResult)
+        private IActionResult EditView(EditModel model, IdentityResult? identityResult)
         {
             if (identityResult != null && !identityResult.Succeeded)
             {
@@ -140,16 +141,17 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
             return View("Edit", model);
         }
 
-        private async Task<IdentityResult> SaveRoleAsync(IdentityRole role)
+        private async Task<IdentityResult?> SaveRoleAsync(IdentityRole role)
         {
-            if (role.Id == null)
+            if (role.Id == "NEW")
             {
                 role.Id = Guid.NewGuid().ToString();
                 return await roleManager.CreateAsync(role);
             }
             else
             {
-                var storedRole = await roleManager.FindByIdAsync(role.Id);
+                var storedRole = await roleManager.FindByIdAsync(role.Id)
+                    ?? throw new NullReferenceException($"Failed to find role with id {role.Id}.");
                 if (storedRole.Name == role.Name) return null;
 
                 storedRole.Name = role.Name;

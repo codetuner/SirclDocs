@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace SirclDocs.Website
 {
     public static class ContentHtmlExtensions
@@ -16,17 +18,10 @@ namespace SirclDocs.Website
         /// into
         /// @Html.Content("Title")
         /// </summary>
-        public static IHtmlContent Content(this IHtmlHelper<ContentModel> htmlHelper, string propertyName, object additionalViewData = null)
+        public static IHtmlContent Content(this IHtmlHelper<ContentModel> htmlHelper, string propertyName, object? additionalViewData = null)
         {
             var property = htmlHelper.ViewData.Model.Document[propertyName];
-            if (property != null && property.Type.DataType != null)
-            { 
-                return htmlHelper.DisplayFor(m => m.Document[propertyName].Value, property.Type.DataType.Template, additionalViewData);
-            }
-            else
-            {
-                return htmlHelper.Raw("");
-            }
+            return htmlHelper.DisplayFor(m => m.Document[propertyName].Value, property.DataTypeTemplate, additionalViewData);
         }
     }
 }

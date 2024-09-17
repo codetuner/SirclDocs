@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Data.Content
 {
@@ -16,7 +14,7 @@ namespace SirclDocs.Website.Data.Content
         /// <summary>
         /// Identifier of the secured path.
         /// </summary>
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public virtual int Id { get; set; }
 
         /// <summary>
@@ -24,17 +22,17 @@ namespace SirclDocs.Website.Data.Content
         /// </summary>
         [MaxLength(2000)]
         [Required]
-        public virtual string Path { get; set; }
+        public virtual required string Path { get; set; }
 
         /// <summary>
         /// Comma separated list of roles to limit access to this path to.
         /// </summary>
         [MaxLength(2000)]
-        public virtual string Roles { get; set; }
+        public virtual string? Roles { get; set; }
 
         /// <summary>
         /// Internal notes.
         /// </summary>
-        public virtual string Notes { get; set; }
+        public virtual string? Notes { get; set; }
     }
 }

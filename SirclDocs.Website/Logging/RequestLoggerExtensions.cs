@@ -1,8 +1,4 @@
 ﻿using Microsoft.AspNetCore.Builder;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SirclDocs.Website.Logging
 {
@@ -11,6 +7,12 @@ namespace SirclDocs.Website.Logging
         public static LoggingBuilder UseArebisRequestLog(this IApplicationBuilder builder)
         {
             return new LoggingBuilder(builder.UseMiddleware<RequestLogMiddleware>());
+        }
+
+        public static LoggingBuilder ApplyDoNotLogRule(this LoggingBuilder builder)
+        {
+            builder.Application.UseMiddleware<RequestDoNotLogRuleFilter>();
+            return builder;
         }
 
         public static LoggingBuilder LogSlowRequests(this LoggingBuilder builder)

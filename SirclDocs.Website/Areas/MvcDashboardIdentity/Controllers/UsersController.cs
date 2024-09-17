@@ -1,15 +1,18 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using SirclDocs.Website.Areas.MvcDashboardIdentity.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using SirclDocs.Website.Areas.MvcDashboardIdentity.Models.Users;
 using SirclDocs.Website.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
 {
@@ -20,10 +23,9 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
         private readonly ApplicationDbContext context;
         private readonly UserManager<IdentityUser> userManager;
 
-        public UsersController(IServiceProvider services, ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        public UsersController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             this.context = context;
-            //this.userManager = (UserManager<IdentityUser>)services.GetService(typeof(UserManager<IdentityUser>));
             this.userManager = userManager;
         }
 
@@ -31,29 +33,29 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
 
         #region Claim Types
 
-        static Dictionary<string, string> ClaimTypeToName;
-        static Dictionary<string, string> ClaimTypeToAlias;
+        static readonly Dictionary<string, string> ClaimTypeToName;
+        static readonly Dictionary<string, string> ClaimTypeToAlias;
 
         static UsersController()
         {
             var claimTypes = typeof(ClaimTypes)
                 .GetFields(BindingFlags.Static | BindingFlags.Public)
                 .OrderBy(f => f.Name)
-                .Select(f => new string[] { "@" + f.Name, (string)f.GetValue(null) })
+                .Select(f => new string?[] { "@" + f.Name, (string?)f.GetValue(null) })
                 .ToArray();
 
             ClaimTypeToName = new Dictionary<string, string>();
             ClaimTypeToAlias = new Dictionary<string, string>();
             foreach (var type in claimTypes)
             {
-                ClaimTypeToName[type[0]] = type[1];
-                ClaimTypeToAlias[type[1]] = type[0];
+                ClaimTypeToName[type[0] ?? String.Empty] = type[1] ?? String.Empty;
+                ClaimTypeToAlias[type[1] ?? String.Empty] = type[0] ?? String.Empty;
             }
         }
 
         static string ClaimsGet(Dictionary<string, string> claimsDict, string key)
         {
-            if (claimsDict.TryGetValue(key, out string value))
+            if (claimsDict.TryGetValue(key, out string? value))
             {
                 return value;
             }
@@ -72,7 +74,20 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
             // Retrieve data:
             var query = context.Users.AsQueryable();
             if (!String.IsNullOrWhiteSpace(model.Query))
-                query = query.Where(d => d.NormalizedUserName.Contains(model.Query) || d.NormalizedEmail.Contains(model.Query));
+            {
+                query = query.Where(d => d.NormalizedUserName!.Contains(model.Query) || d.NormalizedEmail!.Contains(model.Query));
+            }
+            if (!String.IsNullOrWhiteSpace(model.SelectedRoleName)) 
+            {
+                var roleId = context.Roles.SingleOrDefault(r => r.Name == model.SelectedRoleName)?.Id;
+                if (roleId != null)
+                {
+                    // Retrieving all user ids having that role (not ideal, but how to do otherwise?):
+                    var userIds = context.UserRoles.Where(ur => ur.RoleId == roleId).Select(ur => ur.UserId);
+                    // Filter on user ids:
+                    query = query.Where(d => userIds.Contains(d.Id));
+                }
+            }
 
             // Build model:
             var count = query
@@ -85,16 +100,20 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
                 .ToArray();
 
             // Render view:
+            model.RoleNames = context.Roles.Select(r => r.Name)
+                .OrderBy(n => n)
+                .Select(d => new SelectListItem() { Value = d, Text = d/*, Selected = (model.SelectedRoleName == d)*/ })
+                .ToList();
             return View("Index", model);
         }
 
-        public IActionResult DownloadList(string q = null)
+        public IActionResult DownloadList(string? q = null)
         {
             // Retrieve data:
             var query = context.Users.AsQueryable();
             var fullCount = query.Count();
             if (!String.IsNullOrWhiteSpace(q))
-                query = query.Where(d => d.NormalizedUserName.Contains(q) || d.NormalizedEmail.Contains(q));
+                query = query.Where(d => d.NormalizedUserName!.Contains(q) || d.NormalizedEmail!.Contains(q));
 
             // Build CSV:
             var sb = new StringBuilder();
@@ -119,14 +138,19 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
         public async Task<IActionResult> Edit(string id)
         {
             // Retrieve data:
-            var user = await userManager.FindByIdAsync(id);
+            var user = (await userManager.FindByIdAsync(id)) ?? new IdentityUser() { Id = "NEW", ConcurrencyStamp = "" };
 
             // Build model:
-            var model = new EditModel() { Item = user };
-            model.SupportsUserRoles = userManager.SupportsUserRole;
+            var model = new EditModel
+            {
+                Item = user,
+                CanHavePassword = userManager.SupportsUserPassword,
+                CanHaveInitialPassword = userManager.SupportsUserPassword && (user?.PasswordHash == null),
+                SupportsUserRoles = userManager.SupportsUserRole,
+                SupportsUserClaims = userManager.SupportsUserClaim
+            };
             if (model.SupportsUserRoles)
-                model.UserRoleNames = context.Roles.Where(r => context.UserRoles.Where(ur => ur.UserId == id).Select(ur => ur.RoleId).Contains(r.Id)).Select(r => r.Name).ToList();
-            model.SupportsUserClaims = userManager.SupportsUserClaim;
+                model.UserRoleNames = context.Roles.Where(r => context.UserRoles.Where(ur => ur.UserId == id).Select(ur => ur.RoleId).Contains(r.Id)).Select(r => r.Name!).ToList();
             if (model.SupportsUserClaims)
                 model.UserClaims = context.UserClaims.Where(c => c.UserId == id).ToList();
 
@@ -137,24 +161,23 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
         [HttpPost]
         public async Task<IActionResult> Save(string id, EditModel model, bool apply = false)
         {
-            //if (String.IsNullOrWhiteSpace(model.Item.UserName))
-            //    ModelState.AddModelError("Item.UserName", "UserName is required.");
+            if (id != model.Item.Id) throw new SecurityException();
 
-            IdentityResult result = null;
+            ModelState.ClearValidationState("Id");
+            ModelState.MarkFieldSkipped("Id");
             if (ModelState.IsValid)
             {
-                result = await this.SaveUserAsync(model.Item, model.UserRoleNames, model.UserClaims);
+                var result = await this.SaveUserAsync(model.Item, model.UserRoleNames, model.UserClaims, model.InitialPassword, model.RemovePasswordOnSave);
                 if (result.Succeeded)
                 {
                     Response.Headers["X-Sircl-Load"] = "#topMenu";
-                    if (!apply)
+                    if (apply)
                     {
-                        return Back(false);
+                        return this.ForwardToAction("Edit", null, new { model.Item.Id });
                     }
                     else
                     {
-                        ModelState.Clear();
-                        model.HasChanges = false;
+                        return Back(false);
                     }
                 }
                 else
@@ -166,7 +189,21 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
                 }
             }
 
-            Response.Headers.Add("X-Sircl-History-Replace", Url.Action("Edit", new { id = model.Item.Id }));
+            Response.Headers["X-Sircl-History-Replace"] = Url.Action("Edit", new { id = model.Item.Id });
+            return EditView(model);
+        }
+
+        [HttpPost]
+        public IActionResult RemovePassword(string id, EditModel model)
+        {
+            if (id != model.Item.Id) throw new SecurityException();
+
+            ModelState.Clear();
+
+            model.RemovePasswordOnSave = true;
+            model.CanHaveInitialPassword = true;
+            model.HasChanges = true;
+
             return EditView(model);
         }
 
@@ -174,6 +211,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
         public IActionResult AddClaimDlgBody(EditModel model)
         {
             ModelState.Clear();
+
             return EditView(model, viewName: "Edit_Claims_AddClaimDlgBody");
         }
 
@@ -195,7 +233,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
                 model.UserClaims.Add(model.NewClaim);
 
                 // Mark dirty:
-                model.HasChanges = true;
+                Response.Headers["X-Sircl-Form-Changed"] = "true";
             }
 
             // Return view:
@@ -211,7 +249,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
             model.UserClaims.RemoveAt(claimIndex);
 
             // Mark dirty:
-            model.HasChanges = true;
+            Response.Headers["X-Sircl-Form-Changed"] = "true";
 
             // Return view:
             return EditView(model, viewName: "Edit_Claims");
@@ -238,7 +276,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
             }
         }
 
-        private IActionResult EditView(EditModel model, IdentityResult identityResult = null, string viewName = null)
+        private IActionResult EditView(EditModel model, IdentityResult? identityResult = null, string? viewName = null)
         {
             if (identityResult != null && !identityResult.Succeeded)
             {
@@ -258,25 +296,38 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
             return View(viewName ?? "Edit", model);
         }
 
-        private async Task<IdentityResult> SaveUserAsync(IdentityUser user, List<string> userRoleNames, List<IdentityUserClaim<string>> userClaims)
+        private async Task<IdentityResult> SaveUserAsync(IdentityUser user, List<string> userRoleNames, List<IdentityUserClaim<string>> userClaims, string? password, bool removePasswordOnSave)
         {
             IdentityResult result;
             IdentityUser storedUser;
-            if (user.Id == null)
+            if (user.Id == "NEW")
             {
                 // Create user object:
                 user.Id = Guid.NewGuid().ToString();
-                result = await userManager.CreateAsync(user);
-                if (!result.Succeeded) return result;
+                if (String.IsNullOrEmpty(password))
+                {
+                    result = await userManager.CreateAsync(user);
+                }
+                else
+                {
+                    result = await userManager.CreateAsync(user, password);
+                }
+                if (!result.Succeeded)
+                {
+                    user.Id = null!;
+                    return result;
+                }
 
                 // Retrieve stored user:
-                storedUser = await userManager.FindByNameAsync(user.UserName);
+                storedUser = await userManager.FindByNameAsync(user.UserName!)
+                    ?? throw new NullReferenceException("Failed to create user.");
             }
             else
             {
                 // Update user object:
-                storedUser = await userManager.FindByIdAsync(user.Id);
-                storedUser.UserName = user.UserName;
+                storedUser = await userManager.FindByIdAsync(user.Id)
+                    ?? throw new NullReferenceException("No user found with given user.Id!");
+                storedUser.UserName = user.UserName!;
                 storedUser.Email = user.Email;
                 storedUser.EmailConfirmed = user.EmailConfirmed;
                 storedUser.PhoneNumber = user.PhoneNumber;
@@ -287,6 +338,17 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
                 storedUser.ConcurrencyStamp = user.ConcurrencyStamp;
                 result = await userManager.UpdateAsync(storedUser);
                 if (!result.Succeeded) return result;
+                if (removePasswordOnSave)
+                {
+                    result = await userManager.RemovePasswordAsync(storedUser);
+                    if (!result.Succeeded) return result;
+                }
+                if (!String.IsNullOrEmpty(password))
+                {
+                    var token = await userManager.GeneratePasswordResetTokenAsync(storedUser);
+                    result = await userManager.ResetPasswordAsync(storedUser, token, password);
+                    if (!result.Succeeded) return result;
+                }
             }
 
             // Update roles:
@@ -295,7 +357,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
                 // Remove claims without value:
                 userClaims = userClaims.Where(c => !String.IsNullOrWhiteSpace(c.ClaimValue)).ToList();
                 // Synchronise with stored claims:
-                var storedUserRoleNames = context.Roles.Where(r => context.UserRoles.Where(ur => ur.UserId == storedUser.Id).Select(ur => ur.RoleId).Contains(r.Id)).Select(r => r.Name).ToList();
+                var storedUserRoleNames = context.Roles.Where(r => context.UserRoles.Where(ur => ur.UserId == storedUser!.Id).Select(ur => ur.RoleId).Contains(r.Id)).Select(r => r.Name!).ToList();
                 var roleNamesToKeep = new List<string>();
                 foreach (var name in userRoleNames)
                 {
@@ -325,20 +387,20 @@ namespace SirclDocs.Website.Areas.MvcDashboardIdentity.Controllers
                     var updatedclaim = userClaims.Single(c => c.Id == sameclaim.Id);
                     if (updatedclaim.ClaimValue != sameclaim.ClaimValue)
                     {
-                        result = await userManager.RemoveClaimAsync(storedUser, new Claim(sameclaim.ClaimType, sameclaim.ClaimValue));
+                        result = await userManager.RemoveClaimAsync(storedUser, new Claim(sameclaim.ClaimType!, sameclaim.ClaimValue!));
                         if (!result.Succeeded) return result;
-                        result = await userManager.AddClaimAsync(storedUser, new Claim(updatedclaim.ClaimType, updatedclaim.ClaimValue));
+                        result = await userManager.AddClaimAsync(storedUser, new Claim(updatedclaim.ClaimType!, updatedclaim.ClaimValue!));
                         if (!result.Succeeded) return result;
                     }
                 }
                 foreach (var oldclaim in storedClaims.Where(c => !userClaims.Select(cs => cs.Id).Contains(c.Id)))
                 {
-                    result = await userManager.RemoveClaimAsync(storedUser, new Claim(oldclaim.ClaimType, oldclaim.ClaimValue));
+                    result = await userManager.RemoveClaimAsync(storedUser, new Claim(oldclaim.ClaimType!, oldclaim.ClaimValue!));
                     if (!result.Succeeded) return result;
                 }
                 foreach (var newclaim in userClaims.Where(c => !storedClaims.Select(cs => cs.Id).Contains(c.Id)))
                 {
-                    result = await userManager.AddClaimAsync(storedUser, new Claim(newclaim.ClaimType, newclaim.ClaimValue));
+                    result = await userManager.AddClaimAsync(storedUser, new Claim(newclaim.ClaimType!, newclaim.ClaimValue!));
                     if (!result.Succeeded) return result;
                 }
             }
