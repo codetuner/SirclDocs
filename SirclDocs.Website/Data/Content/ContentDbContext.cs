@@ -66,7 +66,7 @@ namespace SirclDocs.Website.Data.Content
                 .HasColumnType(jsonType)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions(JsonSerializerDefaults.General)),
-                    v => DeserializeToDict(v));
+                    v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, new JsonSerializerOptions(JsonSerializerDefaults.General))!);
 
             modelBuilder.Entity<Property>().Property(p => p.Settings)
                 .HasColumnType(jsonType)
@@ -81,20 +81,6 @@ namespace SirclDocs.Website.Data.Content
                     v => JsonSerializer.Deserialize<List<PublishedDocumentProperty>>(v, new JsonSerializerOptions(JsonSerializerDefaults.General))!);
         }
 
-        private Dictionary<string, string> DeserializeToDict(string v)
-        {
-            try
-            {
-                var result = JsonSerializer.Deserialize<Dictionary<string, string>>(v, new JsonSerializerOptions(JsonSerializerDefaults.General));
-                return result;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-                throw;
-            }
-        }
-
         public DbSet<Content.Property> ContentProperties { get; set; }
 
         public DbSet<Content.PropertyType> ContentPropertyTypes { get; set; }
@@ -102,7 +88,7 @@ namespace SirclDocs.Website.Data.Content
         public DbSet<Content.DataType> ContentDataTypes { get; set; }
 
         public DbSet<Content.Document> ContentDocuments { get; set; }
-
+        
         public DbSet<Content.DocumentType> ContentDocumentTypes { get; set; }
 
         public DbSet<Content.PublishedDocument> ContentPublishedDocuments { get; set; }
