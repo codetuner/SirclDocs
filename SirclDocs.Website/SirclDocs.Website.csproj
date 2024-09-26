@@ -27,6 +27,7 @@
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
     <Folder Include="wwwroot\lib\prismjs\" />
+    <Folder Include="wwwroot\Media\" />
   </ItemGroup>
 
   <ItemGroup>
