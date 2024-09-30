@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -52,14 +53,17 @@ namespace SirclDocs.Website
 
             services.AddCors(options =>
             {
-                options.AddPolicy("SamplesPolicy",
-                    builder => {
+                options.AddPolicy("AllowCodePenAccess",
+                    builder =>
+                    {
                         builder.WithOrigins("https://cdpn.io")
+                        .SetIsOriginAllowedToAllowWildcardSubdomains()
                         .AllowAnyHeader()
-                        .AllowAnyMethod();
-                        //builder.AllowAnyOrigin()
-                        //.AllowAnyHeader()
-                        //.AllowAnyMethod();
+                        .AllowAnyMethod()
+                        .WithExposedHeaders("X-Sircl-Target", "X-Sircl-Target-Method", "X-Sircl-Sub-Target", "X-Sircl-Render-Mode", "X-Sircl-Load",
+                            "X-Sircl-Reload-After", "X-Sircl-History", "X-Sircl-History-Replace", "X-Sircl-Document-Title", "X-Sircl-Document-Language",
+                            "X-Sircl-Alert-Message", "X-Sircl-Form-Changed", "Location")
+                        .AllowCredentials();
                     });
             });
 
@@ -92,7 +96,7 @@ namespace SirclDocs.Website
             #endregion
 
             #region SMTP
-            
+
             services.AddTransient<IEmailSender, SmtpEmailSender>(i =>
                 new SmtpEmailSender(
                     Configuration["SmtpEmailSender:Host"],
@@ -107,7 +111,7 @@ namespace SirclDocs.Website
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICorsService corsService, ICorsPolicyProvider corsPolicyProvider)
         {
             if (env.IsDevelopment())
             {
@@ -143,11 +147,28 @@ namespace SirclDocs.Website
             });
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
+
+            app.UseCors("AllowCodePenAccess");
+
+            // Provide CORS support for static files so CodePen can also access them:
+            // https://www.bytefish.de/blog/aspnetcore_static_files_cors.html
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                ServeUnknownFileTypes = true,
+                OnPrepareResponse = (ctx) =>
+                {
+                    var policy = corsPolicyProvider.GetPolicyAsync(ctx.Context, "AllowCodePenAccess")
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .GetResult();
+
+                    var corsResult = corsService.EvaluatePolicy(ctx.Context, policy);
+
+                    corsService.ApplyResult(corsResult, ctx.Context.Response);
+                }
+            });
 
             app.UseRouting();
-
-            app.UseCors();
 
             app.UseAuthentication();
             app.UseAuthorization();

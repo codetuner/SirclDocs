@@ -11,7 +11,7 @@ using SirclDocs.Website.Models.Samples;
 
 namespace SirclDocs.Website.Controllers
 {
-    [EnableCors("SamplesPolicy")]
+    [EnableCors("AllowCodePenAccess")]
     public class SamplesController : Controller
     {
         #region Shared sample actions
