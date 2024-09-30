@@ -31,6 +31,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Areas\MvcDashboardContent\Views\Media\CreateDirectory.cshtml" />
+    <None Include="Areas\MvcDashboardContent\Views\Media\DeleteDirectory.cshtml" />
+    <None Include="Areas\MvcDashboardContent\Views\Media\DeleteSelection.cshtml" />
+    <None Include="Areas\MvcDashboardContent\Views\Media\Index.cshtml" />
+    <None Include="Areas\MvcDashboardContent\Views\Media\RenameDirectory.cshtml" />
+    <None Include="Areas\MvcDashboardContent\Views\Media\RenameFile.cshtml" />
+    <None Include="Areas\MvcDashboardContent\Views\Media\_ViewImports.cshtml" />
     <None Include="Views\Samples\CarLeaseCalculator.cshtml" />
     <None Include="Views\Samples\TaskList.cshtml" />
     <None Include="Views\Samples\LizaDonnovan.cshtml" />
