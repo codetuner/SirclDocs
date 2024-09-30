@@ -56,7 +56,7 @@ namespace SirclDocs.Website
                 options.AddPolicy("AllowCodePenAccess",
                     builder =>
                     {
-                        builder.WithOrigins("https://cdpn.io")
+                        builder.WithOrigins("https://cdpn.io", "https://localhost:44386" /* Local Sircl2 */ )
                         .SetIsOriginAllowedToAllowWildcardSubdomains()
                         .AllowAnyHeader()
                         .AllowAnyMethod()
