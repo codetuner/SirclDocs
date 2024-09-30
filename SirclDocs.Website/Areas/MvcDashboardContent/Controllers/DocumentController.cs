@@ -371,7 +371,7 @@ namespace SirclDocs.Website.Areas.MvcDashboardContent.Controllers
                 var root = new DirectoryInfo(path);
                 foreach (var file in root.EnumerateFiles("*.*", SearchOption.AllDirectories))
                 {
-                    if (new string[] { ".png", ".jpg", ".jpeg", ".gif" }.Contains(file.Extension.ToLowerInvariant()))
+                    if (new string[] { ".webp", ".png", ".jpg", ".jpeg", ".gif", ".bmp" }.Contains(file.Extension.ToLowerInvariant()))
                     {
                         var localname = file.FullName.Replace(env.WebRootPath, "", StringComparison.OrdinalIgnoreCase).Replace('\\', '/');
                         model.ImageFiles.Add(new EditModel.ImageFileItem() { title = localname, value = localname });
