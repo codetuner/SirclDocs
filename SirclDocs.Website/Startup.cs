@@ -148,8 +148,6 @@ namespace SirclDocs.Website
 
             app.UseHttpsRedirection();
 
-            app.UseCors("AllowCodePenAccess");
-
             // Provide CORS support for static files so CodePen can also access them:
             // https://www.bytefish.de/blog/aspnetcore_static_files_cors.html
             app.UseStaticFiles(new StaticFileOptions
@@ -169,6 +167,8 @@ namespace SirclDocs.Website
             });
 
             app.UseRouting();
+
+            app.UseCors();
 
             app.UseAuthentication();
             app.UseAuthorization();
