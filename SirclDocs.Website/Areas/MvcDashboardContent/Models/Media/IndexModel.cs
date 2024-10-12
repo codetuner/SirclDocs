@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 
+#nullable enable
+
 namespace SirclDocs.Website.Areas.MvcDashboardContent.Models.Media
 {
     public class IndexModel
