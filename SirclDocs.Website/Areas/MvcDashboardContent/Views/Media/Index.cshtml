@@ -63,7 +63,7 @@
 <div class="folder-list card p-3 bg-white mb-1">
     <div class="">
         <span class="float-end">
-            <a class="btn btn-danger" show-ifanychecked=".file-item-chk" hidden asp-action="DeleteSelection" target="#mediamodal-content"><i class="spinner fas fa-trash-alt"></i> Delete selected file(s)</a>
+            <a class="btn btn-danger" show-ifanychecked=".file-item-chk" hidden asp-action="DeleteSelection" target="#mediaformmodal-content"><i class="spinner fas fa-trash-alt"></i> Delete selected file(s)</a>
         </span>
         @foreach (var item in Model.BreadCrumb)
         {
@@ -71,14 +71,14 @@
         }
         @if (Model.Files.Length == 0 && Model.Directories.Count == 0)
         {
-            <a class="btn btn-danger" asp-action="DeleteDirectory" target="#mediamodal-content" title="Delete current folder" onkeydown-click="-"><i class="fas fa-minus"></i></a>
+            <a class="btn btn-danger" asp-action="DeleteDirectory" target="#mediaformmodal-content" title="Delete current folder" onkeydown-click="-"><i class="fas fa-minus"></i></a>
         }
         :
         @foreach (var item in Model.Directories.OrderBy(d => d.Text))
         {
             <a class="btn btn-outline-primary" asp-action="Index" asp-route-path="@(item.Value)"><i class="fas fa-folder"></i> @(item.Text)</a>
         }
-        <a class="btn btn-outline-primary" asp-action="CreateDirectory" target="#mediamodal-content" title="Create new folder" onkeydown-click="+"><i class="fas fa-plus"></i></a>
+        <a class="btn btn-outline-primary" asp-action="CreateDirectory" target="#mediaformmodal-content" title="Create new folder" onkeydown-click="+"><i class="fas fa-plus"></i></a>
     </div>
 </div>
 
@@ -108,6 +108,20 @@
                         <i class="file-icon fas fa-plus"></i>
                     </div>
                     <h5 class="card-title">Upload</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mediaformmodal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+            <div id="mediaformmodal-content" class="modal-content" onkeyenter-click=">#btnOk" onkeyescape-click=">#btnCancel">
+                <div class="modal-header">
+                    <h5 class="modal-title">Media</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="fas fa-spinner fa-pulse m-4" style="font-size:400%; color: cadetblue;"></i>
                 </div>
             </div>
         </div>
