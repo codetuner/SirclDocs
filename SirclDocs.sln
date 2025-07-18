@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31112.23
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SirclDocs.Website", "SirclDocs.Website\SirclDocs.Website.csproj", "{9B808804-1615-48D5-9B87-7C8197950FA4}"
 EndProject
@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{8B7C8CBA
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		LICENSE = LICENSE
+		NotepadPP-shortcuts.xml = NotepadPP-shortcuts.xml
 		README.md = README.md
 	EndProjectSection
 EndProject
